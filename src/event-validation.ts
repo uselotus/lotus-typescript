@@ -1,9 +1,13 @@
 import {
     CancelSubscriptionParams,
-    ChangeSubscriptionParams, CreateCustomerParams, CreateSubscriptionParams,
-    CustomerAccessParams, CustomerDetailsParams,
+    ChangeSubscriptionParams,
+    CreateCustomerParams,
+    CreateSubscriptionParams,
+    CustomerAccessParams,
+    CustomerDetailsParams,
     SubscriptionDetailsParams,
-    ValidateEventType
+    ValidateEventType,
+    TrackEvent,
 } from "./data-types";
 
 /**
@@ -26,12 +30,8 @@ export function eventValidation(event, type) {
             return validateSubscriptionDetailsEvent(event)
         case ValidateEventType.customerAccess:
             return validateCustomerAccessEvent(event)
-        //
-        // case ValidateEventType.trackEvent:
-        //     // validateGenericEvent(event)
-        //     type = type || event.type
-        //     // assert(type, 'You must pass an event type.')
-        //     return validateTrackEventEvent(event)
+        case ValidateEventType.trackEvent:
+            return validateTrackEventEvent(event)
         default:
             throw new Error("Invalid Event Type")
     }
@@ -166,39 +166,12 @@ function validateCustomerAccessEvent(event:CustomerAccessParams) {
 /**
  * Validate a "trackEvent" event.
  */
-function validateTrackEventEvent(event) {
-    if (!("event_name" in event || "eventName" in event)) {
-        throw new Error("event_name is a required key")
+function validateTrackEventEvent(event:TrackEvent) {
+    if (!event.customerId) {
+        throw new Error("customerId is a required key")
     }
 
-    if (!("customer_id" in event || "customerId" in event)) {
-        throw new Error("customer_id is a required key")
+    if (!event.eventName) {
+        throw new Error("eventName is a required key")
     }
 }
-
-/**
- * Validation rules.
- */
-
-// function validateGenericEvent(event) {
-//     // assert(type(event) === 'object', 'You must pass a message object.')
-//     const json = JSON.stringify(event)
-//     // Strings are variable byte encoded, so json.length is not sufficient.
-//     // assert(Buffer.byteLength(json, 'utf8') < MAX_SIZE, 'Your message must be < 32 kB.')
-//
-//     for (var key in genericValidationRules) {
-//         var val = event[key]
-//         if (!val) continue
-//         var rule = genericValidationRules[key]
-//         if (type(rule) !== 'array') {
-//             rule = [rule]
-//         }
-//         var a = rule[0] === 'object' ? 'an' : 'a'
-//         assert(
-//             rule.some(function (e) {
-//                 return type(val) === e
-//             }),
-//             '"' + key + '" must be ' + a + ' ' + join(rule, 'or') + '.'
-//         )
-//     }
-// }

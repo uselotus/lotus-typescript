@@ -81,3 +81,10 @@ export interface CustomerAccessParams {
     eventName?:string;
     featureName?:string;
 }
+
+export interface TrackEvent {
+    eventName:string;
+    customerId:string;
+    idempotencyId:string;
+    timeCreated: Date;
+}

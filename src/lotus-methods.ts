@@ -12,7 +12,7 @@ import {
     ChangeSubscriptionParams,
     SubscriptionDetailsParams,
     CustomerAccessParams,
-    CustomerDetailsParams, REQUEST_URLS
+    CustomerDetailsParams, REQUEST_URLS, TrackEvent
 } from "./data-types";
 
 const noop = () => {}
@@ -102,11 +102,11 @@ export class Lotus {
      * Add a `message` of type `type` to the queue and
      * check whether it should be flushed.
      *
-     * @param {Object} message
+     * @param params
      * @param {Function} [callback] (optional)
      * @api private
      */
-    private enqueue(message, callback) {
+    private enqueue(params: TrackEvent, callback) {
         callback = callback || noop
 
         if (!this.enable) {
@@ -114,10 +114,10 @@ export class Lotus {
         }
 
         const data = {
-            time_created: message.timeCreated || new Date() ,
-            idempotency_id:  message.idempotencyId  || uuidv4(),
-            customer_id: message.customerId,
-            event_name: message.eventName,
+            time_created: params.timeCreated || new Date() ,
+            idempotency_id:  params.idempotencyId  || uuidv4(),
+            customer_id: params.customerId,
+            event_name: params.eventName,
         }
 
         this.queue.push({ data, callback })
