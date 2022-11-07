@@ -1,1 +1,1 @@
-export Lotus from './lotus-methods'
+export { Lotus } from './lotus-methods'

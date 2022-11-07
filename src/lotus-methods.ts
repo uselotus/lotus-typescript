@@ -3,9 +3,25 @@ import axios from "axios";
 import axiosRetry from 'axios-retry';
 import ms from "ms";
 import {eventValidation} from "./event-validation";
-import {ValidateEventType, CreateCustomerParams, REQUEST_TYPES} from "./data-types";
+import {
+    ValidateEventType,
+    CreateCustomerParams,
+    REQUEST_TYPES,
+    CreateSubscriptionParams,
+    CancelSubscriptionParams,
+    ChangeSubscriptionParams,
+    SubscriptionDetailsParams,
+    CustomerAccessParams,
+    CustomerDetailsParams, REQUEST_URLS
+} from "./data-types";
 
-const makeReq = async (req) => {
+const noop = () => {}
+
+const setImmediate = (functionToExecute, args?:any ) => {
+    return functionToExecute(args)
+}
+
+const callReq = async (req) => {
     try {
         const response = await axios(req)
         return response.data
@@ -15,7 +31,7 @@ const makeReq = async (req) => {
 
 }
 
-class Lotus {
+export class Lotus {
     private readonly host: any;
     private readonly apiKey: any;
     private readonly timeout: boolean;
@@ -23,6 +39,29 @@ class Lotus {
     private readonly flushInterval: any;
     private readonly headers: { "X-API-KEY": any };
     private queue: any[];
+    private readonly enable: boolean;
+    private timer: number;
+
+    private getRequestObject = (method:REQUEST_TYPES, url:string, data?:any) => {
+        if(!data) {
+            return  {
+                method:method,
+                url: url,
+                headers: this.headers,
+            }
+        }
+
+        return  {
+            method:method,
+            url: this.getRequestUrl(url),
+            data,
+            headers: this.headers,
+        }
+
+    }
+
+    private getRequestUrl = (url:string): string => `${this.host}${url}`;
+
     /**
      * Initialize a new `Lotus` with your Lotus organization's `apiKey` and an
      * optional dictionary of `options`.
@@ -34,7 +73,6 @@ class Lotus {
      *   @property {String} host (default: 'https://www.uselotus.app/')
      *   @property {Boolean} enable (default: true)
      */
-
     constructor(apiKey, options) {
         options = options || {}
 
@@ -49,12 +87,7 @@ class Lotus {
         this.timeout = options.timeout || false
         this.flushAt = Math.max(options.flushAt, 1) || 20
         this.flushInterval = typeof options.flushInterval === 'number' ? options.flushInterval : 10000
-        Object.defineProperty(this, 'enable', {
-            configurable: false,
-            writable: false,
-            enumerable: true,
-            value: typeof options.enable === 'boolean' ? options.enable : true,
-        })
+        this.enable = typeof options.enable === 'boolean' ? options.enable : true;
         this.headers = {
             'X-API-KEY': this.apiKey,
         }
@@ -65,13 +98,140 @@ class Lotus {
         })
     }
 
+    /**
+     * Add a `message` of type `type` to the queue and
+     * check whether it should be flushed.
+     *
+     * @param {Object} message
+     * @param {Function} [callback] (optional)
+     * @api private
+     */
+    private enqueue(message, callback) {
+        callback = callback || noop
+
+        if (!this.enable) {
+            return setImmediate(callback)
+        }
+
+        const data = {
+            time_created: message.timeCreated || new Date() ,
+            idempotency_id:  message.idempotencyId  || uuidv4(),
+            customer_id: message.customerId,
+            event_name: message.eventName,
+        }
+
+        this.queue.push({ data, callback })
+
+        if (this.queue.length >= this.flushAt) {
+            this.flush()
+        }
+
+        if (this.flushInterval && !this.timer) {
+            this.timer = setTimeout(() => this.flush(), this.flushInterval)
+        }
+    }
+
+    /**
+     * Flush the current queue
+     *
+     * @param {Function} [callback] (optional)
+     * @return {Lotus}
+     */
+    flush(callback?:any) {
+        callback = callback || noop
+
+        if (!this.enable) {
+            return setImmediate(callback)
+        }
+
+        if (this.timer) {
+            clearTimeout(this.timer)
+            this.timer = null
+        }
+
+        if (!this.queue.length) {
+            return setImmediate(callback)
+        }
+
+        const items = this.queue.splice(0, this.flushAt)
+        const callbacks = items.map(item => item.callback)
+        const messages = items.map(item => item.message)
+
+        const data = {
+            batch: messages,
+        }
+
+        const done = (err?:any) => {
+            callbacks.forEach((callback) => callback(err))
+            callback(err, data)
+        }
+
+        const req = this.getRequestObject(
+            REQUEST_TYPES.POST,
+            REQUEST_URLS.TRACK_EVENT
+        )
+
+        this.setRequestTimeout(req)
+
+        axios(req)
+            .then(res => done(res))
+            .catch(err => {
+                return err.response ? done(err.response.data) : done(err)
+            })
+    }
+
+    /**
+     * Send a trackEvent `message`.
+     *
+     * @param {Object} message (Should contain event name and customer id)
+     * @param {Function} [callback] (optional)
+     * @return {Lotus}
+     */
+    trackEvent(message, callback) {
+        eventValidation(message, ValidateEventType.trackEvent)
+
+        const properties = Object.assign({}, message.properties, {
+            $lib: 'lotus-node',
+        })
+
+        const apiMessage = Object.assign({}, message, { properties })
+
+        this.enqueue(apiMessage, callback)
+
+        return this
+    }
+
+    /**
+     * Get All Customers.
+     *
+     * @return {Object} (Array of customers)
+     */
+    async getCustomers() {
+        const req = this.getRequestObject(REQUEST_TYPES.GET, REQUEST_URLS.GET_CUSTOMERS)
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Get Customer Detail.
+     *
+     * @return {Object}
+     * @param message
+     */
+    async getCustomerDetail(message: CustomerDetailsParams) {
+        eventValidation(message, ValidateEventType.customerDetails)
+        const req = this.getRequestObject(REQUEST_TYPES.GET, REQUEST_URLS.GET_CUSTOMER_DETAIL(message.customerId))
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
 
     /**
       * Create a new Customer.
-      * @param {CreateCustomerParams} params
+     *  @return {Object}
+      * @param params
       *
      */
-    async createCustomer(params) {
+    async createCustomer(params:CreateCustomerParams) {
         eventValidation(params, ValidateEventType.createCustomer)
         const data = {
             customer_id:params.customerId,
@@ -79,432 +239,170 @@ class Lotus {
             balance: params.balance,
             currency: params.currency,
         }
-
-        const req = {
-            method: REQUEST_TYPES.POST,
-            url: `${this.host}/api/customers/`,
-            data: data,
-            headers: this.headers,
-        }
-        if (this.timeout) {
-            req["timeout"] = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-        }
-        return makeReq(req)
+        const req = this.getRequestObject( REQUEST_TYPES.POST, REQUEST_URLS.CREATE_CUSTOMERS, data)
+        this.setRequestTimeout(req)
+        return callReq(req)
     }
 
-//
-//     /**
-//      * Send a trackEvent `message`.
-//      *
-//      * @param {Object} message (Should contain event name and customer id)
-//      * @param {Function} [callback] (optional)
-//      * @return {Lotus}
-//      */
-//     trackEvent(message, callback) {
-//         eventValidation(message, ValidateEventType.trackEvent)
-//
-//         const properties = Object.assign({}, message.properties, {
-//             $lib: 'lotus-node',
-//         })
-//
-//         const apiMessage = Object.assign({}, message, { properties })
-//
-//         this.enqueue('trackEvent', apiMessage, callback)
-//
-//         return this
-//     }
-//
-//     /**
-//      * Get All Customers.
-//      *
-//      * @return {Object} (Array of customers)
-//      */
-//     async getCustomers() {
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//         const req = {
-//             method: 'GET',
-//             url: `${this.host}/api/customers/`,
-//             headers,
-//         }
-//
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Get Customer Detail.
-//      *
-//      * @param {Object} message
-//      * @return {Object}
-//      */
-//     async getCustomerDetail(message) {
-//         eventValidation(message, ValidateEventType.customerDetails)
-//
-//         message.customer_id = message.customerId || message.customer_id
-//         delete message.customerId;
-//
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//         const req = {
-//             method: 'GET',
-//             url: `${this.host}/api/customer_detail/?customer_id=${message.customer_id}`,
-//             headers,
-//         }
-//
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Create a new Subscription.
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     createSubscription(message) {
-//         eventValidation(message, ValidateEventType.createSubscription)
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//
-//         const data = {
-//             customer_id: message.customer_id || message.customerId,
-//             plan_id: message.plan_id || message.planId,
-//             start_date: message.start_date || message.startDate,
-//         }
-//
-//         if (message.end_date) {
-//             data.end_date = message.end_date
-//         }
-//         if (message.status) {
-//             data.status = message.status
-//         }
-//         if (message.auto_renew) {
-//             data.auto_renew = message.auto_renew
-//         }
-//         if (message.is_new) {
-//             data.is_new = message.is_new
-//         }
-//         if (message.subscription_id) {
-//             data.subscription_id = message.subscription_id
-//         }
-//
-//         const req = {
-//             method: 'POST',
-//             url: `${this.host}/api/subscriptions/`,
-//             data,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Cancel a Subscription.
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     cancelSubscription(message) {
-//         eventValidation(message, ValidateEventType.cancelSubscription)
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//
-//         const data = {}
-//         const turn_off_auto_renew = message["turn_off_auto_renew"]
-//         const replace_immediately_type = message["replace_immediately_type"]
-//
-//         if (turn_off_auto_renew) {
-//             data["auto_renew"] = false
-//         }else {
-//             data["status"] = "ended"
-//             data["replace_immediately_type"] = replace_immediately_type
-//         }
-//
-//         const req = {
-//             method: 'PATCH',
-//             url: `${this.host}/api/subscriptions/${message.subscription_id}/`,
-//             data,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Change a Subscription.
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     changeSubscription(message) {
-//         eventValidation(message, ValidateEventType.changeSubscription)
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//
-//         const turn_off_auto_renew = message["turn_off_auto_renew"]
-//         const replace_immediately_type = message["replace_immediately_type"]
-//
-//         const data = {
-//             "plan_id": message.plan_id,
-//             "replace_immediately_type": replace_immediately_type,
-//             "turn_off_auto_renew": turn_off_auto_renew,
-//         }
-//         const req = {
-//             method: 'PATCH',
-//             url: `${this.host}/api/subscriptions/${message.subscription_id}/`,
-//             data,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Get all subscriptions.
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     async getAllSubscriptions(message) {
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//         const req = {
-//             method: 'GET',
-//             url: `${this.host}/api/subscriptions/`,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Get subscription details. subscription_id
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     async getSubscriptionDetails(message) {
-//         eventValidation(message, ValidateEventType.subscriptionDetails)
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//
-//         message.subscription_id = message.subscriptionId || message.subscription_id
-//         delete message.subscriptionId;
-//         const req = {
-//             method: 'GET',
-//             url: `${this.host}/api/subscriptions/${message.subscription_id}`,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Get All plans.
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     async getAllPlans(message) {
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//
-//         const req = {
-//             method: 'GET',
-//             url: `${this.host}/api/plans/`,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Get customer access.
-//      *
-//      * @param {Object} message
-//      *
-//      */
-//     async getCustomerAccess(message) {
-//         eventValidation(message, ValidateEventType.customerAccess)
-//         message = Object.assign({}, message)
-//         message.library = 'lotus-node'
-//
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//
-//         const params = {
-//             customer_id: message.customer_id,
-//             event_limit_type: message.event_limit_type,
-//         }
-//         if (message.event_name) {
-//             params.event_name = message.event_name
-//         } else if (message.feature_name) {
-//             params.feature_name = message.feature_name
-//         }
-//         const req = {
-//             method: 'GET',
-//             url: `${this.host}/api/customer_access/`,
-//             params,
-//             headers,
-//         }
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//         return axiosTest(req)
-//     }
-//
-//     /**
-//      * Add a `message` of type `type` to the queue and
-//      * check whether it should be flushed.
-//      *
-//      * @param {String} type
-//      * @param {Object} message
-//      * @param {Function} [callback] (optional)
-//      * @api private
-//      */
-//     enqueue(type, message, callback) {
-//         callback = callback || noop
-//
-//         if (!this.enable) {
-//             return setImmediate(callback)
-//         }
-//
-//         message = Object.assign({}, message)
-//         message.type = type
-//         message.library = 'lotus-node'
-//
-//         message.time_created = message.timeCreated || message.time_created || new Date() ;
-//         message.idempotency_id =  message.idempotencyId || message.idempotency_id || uuidv4();
-//         message.customer_id = message.customerId || message.customer_id
-//         message.event_name = message.eventName || message.event_name
-//
-//         delete message.timeCreated;
-//         delete message.idempotencyId;
-//         delete message.customerId;
-//         delete message.eventName;
-//
-//         this.queue.push({ message, callback })
-//
-//         if (this.queue.length >= this.flushAt) {
-//             this.flush()
-//         }
-//
-//         if (this.flushInterval && !this.timer) {
-//             this.timer = setTimeout(() => this.flush(), this.flushInterval)
-//         }
-//     }
-//
-//     /**
-//      * Flush the current queue
-//      *
-//      * @param {Function} [callback] (optional)
-//      * @return {Lotus}
-//      */
-//     flush(callback) {
-//         callback = callback || noop
-//
-//         if (!this.enable) {
-//             return setImmediate(callback)
-//         }
-//
-//         if (this.timer) {
-//             clearTimeout(this.timer)
-//             this.timer = null
-//         }
-//
-//         if (!this.queue.length) {
-//             return setImmediate(callback)
-//         }
-//
-//         const items = this.queue.splice(0, this.flushAt)
-//         const callbacks = items.map((item) => item.callback)
-//         const messages = items.map((item) => item.message)
-//
-//         const data = {
-//             batch: messages,
-//         }
-//
-//         const done = (err) => {
-//             callbacks.forEach((callback) => callback(err))
-//             callback(err, data)
-//         }
-//
-//         const headers = {
-//             'X-API-KEY': this.apiKey,
-//         }
-//         if (typeof window === 'undefined') {
-//             headers['user-agent'] = `lotus-node`
-//         }
-//
-//         const req = {
-//             method: 'POST',
-//             url: `${this.host}/api/track/`,
-//             data,
-//             headers,
-//         }
-//
-//         if (this.timeout) {
-//             req.timeout = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
-//         }
-//
-//         axios(req)
-//             .then((res) => {
-//                 done()
-//             })
-//             .catch((err) => {
-//                 if (err.response) {
-//                     const error = new Error(err.response.statusText)
-//                     return done(err.response.data)
-//                 }
-//                 done(err)
-//             })
-//     }
-//
-//     shutdown() {
-//         this.flush()
-//     }
-//
+    /**
+     * Create a new Subscription.
+     *  @return {Object}
+     *  @param params
+     *
+     */
+    async createSubscription(params:CreateSubscriptionParams) {
+        eventValidation(params, ValidateEventType.createSubscription)
+        const data = {
+            customer_id: params.customerId,
+            plan_id: params.planId,
+            start_date: params.startDate,
+        }
+        if (params.endDate) {
+            data["end_date"] = params.endDate
+        }
+        if (params.status) {
+            data["status"] = params.status
+        }
+        if (params.autoRenew) {
+            data["auto_renew"] = params.autoRenew
+        }
+        if (params.isNew) {
+            data["is_new"] = params.isNew
+        }
+        if (params.subscriptionId) {
+            data["subscription_id"] = params.subscriptionId
+        }
+
+        const req = this.getRequestObject(
+            REQUEST_TYPES.POST,
+            REQUEST_URLS.CREATE_SUBSCRIPTION,
+            data,
+        )
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Cancel a Subscription.
+     * @return {Object}
+     * @param params
+     *
+     */
+    cancelSubscription(params:CancelSubscriptionParams) {
+        eventValidation(params, ValidateEventType.cancelSubscription)
+
+        const data = {}
+        const turn_off_auto_renew = params.turnOffAutoRenew
+        const replace_immediately_type = params.replaceImmediatelyType
+
+        if (turn_off_auto_renew) {
+            data["auto_renew"] = false
+        }else {
+            data["status"] = "ended"
+            data["replace_immediately_type"] = replace_immediately_type
+        }
+
+        const req = this.getRequestObject(
+            REQUEST_TYPES.PATCH,
+            REQUEST_URLS.CANCEL_SUBSCRIPTION(params.subscriptionId),
+            data
+        )
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Change a Subscription.
+     *
+     * @param params
+     *
+     */
+    changeSubscription(params:ChangeSubscriptionParams) {
+        eventValidation(params, ValidateEventType.changeSubscription)
+        const data = {
+            "plan_id": params.planId,
+            "replace_immediately_type": params.replaceImmediatelyType,
+            "turn_off_auto_renew": params.turnOffAutoRenew,
+        }
+
+        const req = this.getRequestObject(
+            REQUEST_TYPES.PATCH,
+            REQUEST_URLS.CHANGE_SUBSCRIPTION(params.subscriptionId),
+            data
+        )
+
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Get all subscriptions.
+     *
+     */
+    async getAllSubscriptions() {
+        const req = this.getRequestObject(
+            REQUEST_TYPES.GET,
+            REQUEST_URLS.GET_ALL_SUBSCRIPTIONS
+        )
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Get subscription details. subscription_id
+     *
+     * @param params
+     *
+     */
+    async getSubscriptionDetails(params:SubscriptionDetailsParams) {
+        eventValidation(params, ValidateEventType.subscriptionDetails)
+        const req = this.getRequestObject(
+            REQUEST_TYPES.GET,
+            REQUEST_URLS.GET_SUBSCRIPTION_DETAILS(params.subscriptionId)
+        )
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Get All plans.
+     *
+     */
+    async getAllPlans() {
+        const req = this.getRequestObject(
+            REQUEST_TYPES.GET,
+            REQUEST_URLS.GET_ALL_PLANS
+        )
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
+    /**
+     * Get customer access.
+     *
+     * @param params
+     *
+     */
+    async getCustomerAccess(params:CustomerAccessParams) {
+        eventValidation(params, ValidateEventType.customerAccess)
+        const data = {
+            customer_id: params.customerId,
+            event_limit_type: params.eventLimitType,
+        }
+        if (params.eventName) {
+            data["event_name"] = params.eventName
+        } else if (params.featureName) {
+            data["feature_name"] = params.featureName
+        }
+        const req = this.getRequestObject(
+            REQUEST_TYPES.GET,
+            REQUEST_URLS.GET_CUSTOMER_ACCESS,
+            data
+        )
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
     _isErrorRetryable(error) {
         // Retry Network Errors.
         if (axiosRetry.isNetworkError(error)) {
@@ -524,6 +422,12 @@ class Lotus {
         // Retry if rate limited.
         return error.response.status === 429;
 
+    }
+
+    private setRequestTimeout = (req) => {
+        if (this.timeout) {
+            req["timeout"] = typeof this.timeout === 'string' ? ms(this.timeout) : this.timeout
+        }
     }
 }
 
