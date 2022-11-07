@@ -46,7 +46,7 @@ export class Lotus {
         if(!data) {
             return  {
                 method:method,
-                url: url,
+                url: this.getRequestUrl(url),
                 headers: this.headers,
             }
         }

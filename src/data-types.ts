@@ -14,7 +14,7 @@ export const REQUEST_URLS = {
     GET_ALL_SUBSCRIPTIONS : "/api/subscriptions/",
     GET_SUBSCRIPTION_DETAILS :(subscriptionId) => `/api/subscriptions/${subscriptionId}/`,
     GET_ALL_PLANS : "/api/plans/",
-    GET_CUSTOMER_ACCESS : "/api/plans/",
+    GET_CUSTOMER_ACCESS : "/api/customer_access/",
     TRACK_EVENT : "/api/track/",
 }
 
