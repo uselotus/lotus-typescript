@@ -31,5 +31,6 @@ npm install lotus-typescript
 ## How to use/ Api Docs
 
 You Have to create a new instance of Lotus Object First:
-const lotus = new Lotus()
+const lotus = new Lotus(apiKey, options) 
+
 https://docs.uselotus.io/docs/api
