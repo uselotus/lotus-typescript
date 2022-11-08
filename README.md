@@ -47,5 +47,3 @@ Please refer to the [Lotus documentation](https://docs.uselotus.io/docs/api/) fo
 ### [Join our Slack community.](https://lotus-community.slack.com)
 
 ## Thank you
-
-This library is largely based on the `posthog-node` package.
