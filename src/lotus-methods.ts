@@ -236,8 +236,9 @@ export class Lotus {
         const data = {
             customer_id:params.customerId,
             customer_name: params.customerName,
-            balance: params.balance,
-            currency: params.currency,
+            email: params.email,
+            payment_provider: params.paymentProvider,
+            payment_provider_id: params.paymentProviderId,
         }
         const req = this.getRequestObject( REQUEST_TYPES.POST, REQUEST_URLS.CREATE_CUSTOMERS, data)
         this.setRequestTimeout(req)

@@ -30,17 +30,11 @@ export enum ValidateEventType  {
 }
 
 export interface CreateCustomerParams {
-    customerName:string;
-    customerId?:string
-    currency?:string;
-    balance?:string;
-}
-
-export interface CreateCustomerParams {
-    customerName:string;
-    customerId?:string
-    currency?:string;
-    balance?:string;
+    customerId:string
+    email:string
+    paymentProvider?:string;
+    paymentProviderId?:string;
+    customerName?:string;
 }
 
 export interface CustomerDetailsParams {
