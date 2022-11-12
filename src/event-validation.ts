@@ -48,6 +48,10 @@ function validateCreateCustomerEvent(event:CreateCustomerParams) {
     if (typeof event.customerName !== "string") {
         throw new Error("Customer Name Should be a string")
     }
+
+    if (!event.email) {
+        throw new Error("Email is a required key")
+    }
 }
 
 /**
