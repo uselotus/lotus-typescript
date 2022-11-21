@@ -7,7 +7,7 @@ import {
     CustomerDetailsParams,
     SubscriptionDetailsParams,
     ValidateEventType,
-    TrackEvent,
+    TrackEvent, CreateBatchCustomerParams,
 } from "./data-types";
 
 /**
@@ -32,6 +32,8 @@ export function eventValidation(event, type) {
             return validateCustomerAccessEvent(event)
         case ValidateEventType.trackEvent:
             return validateTrackEventEvent(event)
+        case ValidateEventType.createCustomersBatch:
+            return validateCreateCustomersBatchEvent(event)
         default:
             throw new Error("Invalid Event Type")
     }
@@ -52,6 +54,42 @@ function validateCreateCustomerEvent(event:CreateCustomerParams) {
     if (!event.email) {
         throw new Error("Email is a required key")
     }
+}
+
+
+/**
+ * Validate a "CreateCustomersBatch" event.
+ */
+
+function validateCreateCustomersBatchEvent(event: CreateBatchCustomerParams) {
+    const customers = event.customers || []
+    const behaviorOnExisting = event.behaviorOnExisting
+
+    if (!customers || !customers.length) {
+        throw new Error("Customers is a required array")
+    }
+
+    customers.forEach((customer, index) => {
+        if (!customer.customerId) {
+            throw new Error(`customerId is a required key, Missing in ${index + 1} customer`)
+        }
+
+        if (!customer.email) {
+            throw new Error(`email is a required key, Missing in ${index + 1} customer`)
+        }
+
+    })
+
+    if(!behaviorOnExisting) {
+        throw new Error(`behaviorOnExisting is a required key`)
+    }
+
+    const allowed_types = ["merge","ignore", "overwrite"]
+
+    if (!allowed_types.includes(behaviorOnExisting)) {
+        throw new Error(`behaviorOnExisting Must be one the these "merge","ignore", "overwrite"`)
+    }
+
 }
 
 /**

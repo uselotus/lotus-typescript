@@ -7,6 +7,7 @@ export enum REQUEST_TYPES  {
 export const REQUEST_URLS = {
     GET_CUSTOMERS : "/api/customers/",
     CREATE_CUSTOMERS : "/api/customers/",
+    CREATE_BATCH_CUSTOMERS : "/api/batch_create_customers/",
     GET_CUSTOMER_DETAIL :(customerId) =>  `/api/customers/${customerId}/`,
     CREATE_SUBSCRIPTION : "/api/subscriptions/",
     CANCEL_SUBSCRIPTION :(subscriptionId) => `/api/subscriptions/${subscriptionId}/`,
@@ -27,6 +28,7 @@ export enum ValidateEventType  {
     changeSubscription = "changeSubscription",
     subscriptionDetails = "subscriptionDetails",
     customerAccess = "customerAccess",
+    createCustomersBatch = "createCustomersBatch",
 }
 
 export interface CreateCustomerParams {
@@ -35,6 +37,12 @@ export interface CreateCustomerParams {
     paymentProvider?:string;
     paymentProviderId?:string;
     customerName?:string;
+    properties?:string;
+}
+
+export interface CreateBatchCustomerParams {
+    customers:CreateCustomerParams[]
+    behaviorOnExisting: "merge" |"ignore" | "overwrite";
 }
 
 export interface CustomerDetailsParams {
