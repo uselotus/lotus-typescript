@@ -113,14 +113,15 @@ export class Lotus {
             return setImmediate(callback)
         }
 
-        const data = {
-            time_created: params.timeCreated || new Date() ,
-            idempotency_id:  params.idempotencyId  || uuidv4(),
-            customer_id: params.customerId,
-            event_name: params.eventName,
-        }
-
+        params.batch.forEach(message => {
+         const data = {
+            time_created: message.timeCreated || new Date() ,
+            idempotency_id:  message.idempotencyId  || uuidv4(),
+            customer_id: message.customerId,
+            event_name: message.eventName,
+         }
         this.queue.push({ data, callback })
+        })
 
         if (this.queue.length >= this.flushAt) {
             this.flush()

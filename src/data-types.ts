@@ -76,9 +76,13 @@ export interface CustomerAccessParams {
     featureName?:string;
 }
 
-export interface TrackEvent {
+export interface TrackEventEntity {
     eventName:string;
     customerId:string;
     idempotencyId:string;
     timeCreated: Date;
+}
+
+export interface TrackEvent {
+    batch:TrackEventEntity[]
 }

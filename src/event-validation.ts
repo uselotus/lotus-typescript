@@ -40,7 +40,7 @@ export function eventValidation(event, type) {
 /**
  * Validate a "CreateCustomer" event.
  */
-function validateCreateCustomerEvent(event:CreateCustomerParams) {
+function validateCreateCustomerEvent(event: CreateCustomerParams) {
     if (!event.customerName) {
         throw new Error("Customer Name is a required key")
     }
@@ -57,7 +57,7 @@ function validateCreateCustomerEvent(event:CreateCustomerParams) {
 /**
  * Validate a "CustomerDetails" event.
  */
-function validateCustomerDetailsEvent(event:CustomerDetailsParams) {
+function validateCustomerDetailsEvent(event: CustomerDetailsParams) {
     if (!event.customerId) {
         throw new Error("customerId is a required key")
     }
@@ -66,7 +66,7 @@ function validateCustomerDetailsEvent(event:CustomerDetailsParams) {
 /**
  * Validate a "CreateSubscription" event.
  */
-function validateCreateSubscriptionEvent(event:CreateSubscriptionParams) {
+function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
     if (!event.customerId) {
         throw new Error("customerId is a required key")
     }
@@ -83,7 +83,7 @@ function validateCreateSubscriptionEvent(event:CreateSubscriptionParams) {
 /**
  * Validate a "CancelSubscription" event.
  */
-function validateCancelSubscriptionEvent(event:CancelSubscriptionParams) {
+function validateCancelSubscriptionEvent(event: CancelSubscriptionParams) {
     const subscriptionId = event.subscriptionId;
     const turnOffAutoRenew = event.turnOffAutoRenew;
     const replaceImmediatelyType = event.replaceImmediatelyType;
@@ -92,16 +92,16 @@ function validateCancelSubscriptionEvent(event:CancelSubscriptionParams) {
         throw new Error("subscription_id is a required key")
     }
 
-    if (turnOffAutoRenew &&  replaceImmediatelyType) {
+    if (turnOffAutoRenew && replaceImmediatelyType) {
         throw new Error("Must provide either turnOffAutoRenew or replaceImmediatelyType")
     }
 
-    if(!turnOffAutoRenew) {
+    if (!turnOffAutoRenew) {
         const types = [
             "end_current_subscription_and_bill",
             "end_current_subscription_dont_bill",
         ]
-        if(!types.includes(replaceImmediatelyType)) {
+        if (!types.includes(replaceImmediatelyType)) {
             throw new Error("replaceImmediatelyType must be one of 'end_current_subscription_and_bill', 'end_current_subscription_dont_bill'")
         }
     }
@@ -110,7 +110,7 @@ function validateCancelSubscriptionEvent(event:CancelSubscriptionParams) {
 /**
  * Validate a "ChangeSubscription" event.
  */
-function validateChangeSubscriptionEvent(event:ChangeSubscriptionParams) {
+function validateChangeSubscriptionEvent(event: ChangeSubscriptionParams) {
     if (!event.subscriptionId) {
         throw new Error("subscriptionId is a required key")
     }
@@ -127,11 +127,11 @@ function validateChangeSubscriptionEvent(event:ChangeSubscriptionParams) {
         "change_subscription_plan"
     ]
 
-    if(!replace_immediately_type) {
+    if (!replace_immediately_type) {
         throw new Error("replaceImmediatelyType is a required key")
     }
 
-    if(!types.includes(replace_immediately_type)) {
+    if (!types.includes(replace_immediately_type)) {
         throw new Error("Invalid replace_immediately_type")
     }
 }
@@ -139,7 +139,7 @@ function validateChangeSubscriptionEvent(event:ChangeSubscriptionParams) {
 /**
  * Validate a "SubscriptionDetails" event.
  */
-function validateSubscriptionDetailsEvent(event:SubscriptionDetailsParams) {
+function validateSubscriptionDetailsEvent(event: SubscriptionDetailsParams) {
     if (!event.subscriptionId) {
         throw new Error("subscription_id is a required key")
     }
@@ -148,7 +148,7 @@ function validateSubscriptionDetailsEvent(event:SubscriptionDetailsParams) {
 /**
  * Validate a "Customer Access" event.
  */
-function validateCustomerAccessEvent(event:CustomerAccessParams) {
+function validateCustomerAccessEvent(event: CustomerAccessParams) {
     if (!event.customerId) {
         throw new Error("customerId is a required key")
     }
@@ -170,12 +170,18 @@ function validateCustomerAccessEvent(event:CustomerAccessParams) {
 /**
  * Validate a "trackEvent" event.
  */
-function validateTrackEventEvent(event:TrackEvent) {
-    if (!event.customerId) {
-        throw new Error("customerId is a required key")
+function validateTrackEventEvent(event: TrackEvent) {
+    if (!event.batch || !event.batch.length) {
+        throw new Error("Messages batch can't be empty")
     }
 
-    if (!event.eventName) {
-        throw new Error("eventName is a required key")
-    }
+    event.batch.forEach(messaage => {
+        if (!messaage.customerId) {
+            throw new Error("customerId is a required key")
+        }
+
+        if (!messaage.eventName) {
+            throw new Error("eventName is a required key")
+        }
+    })
 }
