@@ -6,6 +6,7 @@ import {eventValidation} from "./event-validation";
 import {
     ValidateEventType,
     CreateCustomerParams,
+    CreateBatchCustomerParams,
     REQUEST_TYPES,
     CreateSubscriptionParams,
     CancelSubscriptionParams,
@@ -240,11 +241,33 @@ export class Lotus {
             email: params.email,
             payment_provider: params.paymentProvider,
             payment_provider_id: params.paymentProviderId,
+            properties: params.properties,
         }
         const req = this.getRequestObject( REQUEST_TYPES.POST, REQUEST_URLS.CREATE_CUSTOMERS, data)
         this.setRequestTimeout(req)
         return callReq(req)
     }
+
+
+    /**
+     * Create customer batch.
+     * @return {Object}
+     * @param params
+     *
+     */
+    async createCustomersBatch(params:CreateBatchCustomerParams) {
+        eventValidation(params, ValidateEventType.createCustomersBatch)
+
+        const data = {
+            customers: params.customers,
+            behavior_on_existing: params.behaviorOnExisting,
+        }
+
+        const req = this.getRequestObject( REQUEST_TYPES.POST, REQUEST_URLS.CREATE_BATCH_CUSTOMERS, data)
+        this.setRequestTimeout(req)
+        return callReq(req)
+    }
+
 
     /**
      * Create a new Subscription.
