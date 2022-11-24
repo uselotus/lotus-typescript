@@ -159,17 +159,17 @@ export class Lotus {
         }
 
         const items = this.queue.splice(0, this.flushAt)
-        const callbacks = items.map(item => item.callback)
-        const messages = items.map(item => item.message)
+        // const callbacks = items.map(item => item.callback)
+        // const messages = items.map(item => item.message)
 
         const data = {
-            batch: messages,
+            batch: items.map(item => item.data),
         }
 
-        const done = (err?:any) => {
-            callbacks.forEach((callback) => callback(err))
-            callback(err, data)
-        }
+        // const done = (err?:any) => {
+        //     callbacks.forEach((callback) => callback(err))
+        //     callback(err, data)
+        // }
 
         const req = this.getRequestObject(
             REQUEST_TYPES.POST,
@@ -178,12 +178,7 @@ export class Lotus {
         )
 
         this.setRequestTimeout(req)
-
-        axios(req)
-            .then(res => done(res))
-            .catch(err => {
-                return err.response ? done(err.response.data) : done(err)
-            })
+        return callReq(req)
     }
 
     /**
