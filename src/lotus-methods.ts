@@ -121,6 +121,9 @@ export class Lotus {
             customer_id: message.customerId,
             event_name: message.eventName,
          }
+         if(message.properties) {
+             data["properties"] = message.properties
+         }
         this.queue.push({ data, callback })
         })
 
@@ -170,7 +173,8 @@ export class Lotus {
 
         const req = this.getRequestObject(
             REQUEST_TYPES.POST,
-            REQUEST_URLS.TRACK_EVENT
+            REQUEST_URLS.TRACK_EVENT,
+            data
         )
 
         this.setRequestTimeout(req)
