@@ -89,6 +89,7 @@ export interface TrackEventEntity {
     customerId:string;
     idempotencyId:string;
     timeCreated: Date;
+    properties?: any;
 }
 
 export interface TrackEvent {
