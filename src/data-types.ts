@@ -79,7 +79,6 @@ export interface SubscriptionDetailsParams {
 
 export interface CustomerAccessParams {
     customerId:string;
-    eventLimitType:string;
     eventName?:string;
     featureName?:string;
 }
