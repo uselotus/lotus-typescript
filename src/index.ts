@@ -24,15 +24,14 @@ const setImmediate = (functionToExecute, args?:any ) => {
 
 const callReq = async (req) => {
     try {
-        const response = await axios(req)
-        return response.data
+        return axios(req)
     } catch (error) {
         throw  new Error(error)
     }
 
 }
 
-export class Lotus {
+class Lotus {
     private readonly host: any;
     private readonly apiKey: any;
     private readonly timeout: boolean;
@@ -257,8 +256,19 @@ export class Lotus {
     async createCustomersBatch(params:CreateBatchCustomerParams) {
         eventValidation(params, ValidateEventType.createCustomersBatch)
 
+        const customers = params.customers.map(customer => {
+            return  {
+                customer_id:customer.customerId,
+                customer_name: customer.customerName,
+                email: customer.email,
+                payment_provider: customer.paymentProvider,
+                payment_provider_id: customer.paymentProviderId,
+                properties: customer.properties,
+            }
+        })
+
         const data = {
-            customers: params.customers,
+            customers: customers,
             behavior_on_existing: params.behaviorOnExisting,
         }
 
@@ -411,7 +421,6 @@ export class Lotus {
         eventValidation(params, ValidateEventType.customerAccess)
         const data = {
             customer_id: params.customerId,
-            event_limit_type: params.eventLimitType,
         }
         if (params.eventName) {
             data["event_name"] = params.eventName
@@ -454,4 +463,6 @@ export class Lotus {
         }
     }
 }
+
+export { Lotus }
 

@@ -43,12 +43,8 @@ export function eventValidation(event, type) {
  * Validate a "CreateCustomer" event.
  */
 function validateCreateCustomerEvent(event: CreateCustomerParams) {
-    if (!event.customerName) {
-        throw new Error("Customer Name is a required key")
-    }
-
-    if (typeof event.customerName !== "string") {
-        throw new Error("Customer Name Should be a string")
+    if (!event.customerId) {
+        throw new Error("customerId Name is a required key")
     }
 
     if (!event.email) {
@@ -189,10 +185,6 @@ function validateSubscriptionDetailsEvent(event: SubscriptionDetailsParams) {
 function validateCustomerAccessEvent(event: CustomerAccessParams) {
     if (!event.customerId) {
         throw new Error("customerId is a required key")
-    }
-
-    if (!event.eventLimitType) {
-        throw new Error("eventLimitType is a required key")
     }
 
     if (event.eventName && event.featureName) {
