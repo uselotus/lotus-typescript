@@ -1,13 +1,15 @@
 import {
-    CancelSubscriptionParams,
-    ChangeSubscriptionParams,
-    CreateCustomerParams,
-    CreateSubscriptionParams,
-    CustomerAccessParams,
-    CustomerDetailsParams,
-    SubscriptionDetailsParams,
-    ValidateEventType,
-    TrackEvent, CreateBatchCustomerParams,
+  CancelSubscriptionParams,
+  ChangeSubscriptionParams,
+  CreateCustomerParams,
+  CreateSubscriptionParams,
+  CustomerDetailsParams,
+  SubscriptionDetailsParams,
+  ValidateEventType,
+  TrackEvent,
+  CreateBatchCustomerParams,
+  CustomerFeatureAccess,
+  CustomerMetricAccessParams,
 } from "./data-types";
 
 /**
@@ -15,203 +17,236 @@ import {
  */
 
 export function eventValidation(event, type) {
-    switch (type) {
-        case ValidateEventType.createCustomer:
-            return validateCreateCustomerEvent(event)
-        case ValidateEventType.customerDetails:
-            return validateCustomerDetailsEvent(event)
-        case ValidateEventType.createSubscription:
-            return validateCreateSubscriptionEvent(event)
-        case ValidateEventType.cancelSubscription:
-            return validateCancelSubscriptionEvent(event)
-        case ValidateEventType.changeSubscription:
-            return validateChangeSubscriptionEvent(event)
-        case ValidateEventType.subscriptionDetails:
-            return validateSubscriptionDetailsEvent(event)
-        case ValidateEventType.customerAccess:
-            return validateCustomerAccessEvent(event)
-        case ValidateEventType.trackEvent:
-            return validateTrackEventEvent(event)
-        case ValidateEventType.createCustomersBatch:
-            return validateCreateCustomersBatchEvent(event)
-        default:
-            throw new Error("Invalid Event Type")
-    }
+  switch (type) {
+    case ValidateEventType.createCustomer:
+      return validateCreateCustomerEvent(event);
+    case ValidateEventType.customerDetails:
+      return validateCustomerDetailsEvent(event);
+    case ValidateEventType.createSubscription:
+      return validateCreateSubscriptionEvent(event);
+    case ValidateEventType.cancelSubscription:
+      return validateCancelSubscriptionEvent(event);
+    case ValidateEventType.changeSubscription:
+      return validateChangeSubscriptionEvent(event);
+    case ValidateEventType.subscriptionDetails:
+      return validateSubscriptionDetailsEvent(event);
+    case ValidateEventType.customerMetricAccess:
+      return validateCustomerMetricAccessEvent(event);
+    case ValidateEventType.customerFeatureAccess:
+      return validateCustomerFeatureAccessEvent(event);
+    case ValidateEventType.trackEvent:
+      return validateTrackEventEvent(event);
+    case ValidateEventType.createCustomersBatch:
+      return validateCreateCustomersBatchEvent(event);
+    default:
+      throw new Error("Invalid Event Type");
+  }
 }
 
 /**
  * Validate a "CreateCustomer" event.
  */
 function validateCreateCustomerEvent(event: CreateCustomerParams) {
-    if (!event.customerId) {
-        throw new Error("customerId Name is a required key")
-    }
+  if (!event.customerId) {
+    throw new Error("customerId Name is a required key");
+  }
 
-    if (!event.email) {
-        throw new Error("Email is a required key")
-    }
+  if (!event.email) {
+    throw new Error("Email is a required key");
+  }
 }
-
 
 /**
  * Validate a "CreateCustomersBatch" event.
  */
 
 function validateCreateCustomersBatchEvent(event: CreateBatchCustomerParams) {
-    const customers = event.customers || []
-    const behaviorOnExisting = event.behaviorOnExisting
+  const customers = event.customers || [];
+  const behaviorOnExisting = event.behaviorOnExisting;
 
-    if (!customers || !customers.length) {
-        throw new Error("Customers is a required array")
+  if (!customers || !customers.length) {
+    throw new Error("Customers is a required array");
+  }
+
+  customers.forEach((customer, index) => {
+    if (!customer.customerId) {
+      throw new Error(
+        `customerId is a required key, Missing in ${index + 1} customer`
+      );
     }
 
-    customers.forEach((customer, index) => {
-        if (!customer.customerId) {
-            throw new Error(`customerId is a required key, Missing in ${index + 1} customer`)
-        }
-
-        if (!customer.email) {
-            throw new Error(`email is a required key, Missing in ${index + 1} customer`)
-        }
-
-    })
-
-    if(!behaviorOnExisting) {
-        throw new Error(`behaviorOnExisting is a required key`)
+    if (!customer.email) {
+      throw new Error(
+        `email is a required key, Missing in ${index + 1} customer`
+      );
     }
+  });
 
-    const allowed_types = ["merge","ignore", "overwrite"]
+  if (!behaviorOnExisting) {
+    throw new Error(`behaviorOnExisting is a required key`);
+  }
 
-    if (!allowed_types.includes(behaviorOnExisting)) {
-        throw new Error(`behaviorOnExisting Must be one the these "merge","ignore", "overwrite"`)
-    }
+  const allowed_types = ["merge", "ignore", "overwrite"];
 
+  if (!allowed_types.includes(behaviorOnExisting)) {
+    throw new Error(
+      `behaviorOnExisting Must be one the these "merge","ignore", "overwrite"`
+    );
+  }
 }
 
 /**
  * Validate a "CustomerDetails" event.
  */
 function validateCustomerDetailsEvent(event: CustomerDetailsParams) {
-    if (!event.customerId) {
-        throw new Error("customerId is a required key")
-    }
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
 }
 
 /**
  * Validate a "CreateSubscription" event.
  */
 function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
-    if (!event.customerId) {
-        throw new Error("customerId is a required key")
-    }
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
 
-    if (!event.planId) {
-        throw new Error("planId is a required key")
-    }
+  if (!event.planId) {
+    throw new Error("planId is a required key");
+  }
 
-    if (!event.startDate) {
-        throw new Error("startDate is a required key")
+  if (!event.startDate) {
+    throw new Error("startDate is a required key");
+  }
+
+  if (event.subscriptionFilters && !Array.isArray(event.subscriptionFilters)) {
+    throw new Error("subscriptionFilters must be an array");
+  }
+
+  if (event.subscriptionFilters && event.subscriptionFilters.length > 1) {
+    for (let i = 0; i < event.subscriptionFilters.length; i++) {
+      if (
+        !event.subscriptionFilters[i].propertyName ||
+        !event.subscriptionFilters[i].value
+      ) {
+        throw new Error("invalid subscriptionFilters");
+      }
     }
+  }
 }
 
 /**
  * Validate a "CancelSubscription" event.
  */
 function validateCancelSubscriptionEvent(event: CancelSubscriptionParams) {
-    const subscriptionId = event.subscriptionId;
-    const turnOffAutoRenew = event.turnOffAutoRenew;
-    const replaceImmediatelyType = event.replaceImmediatelyType;
+  const subscriptionId = event.subscriptionId;
+  const turnOffAutoRenew = event.turnOffAutoRenew;
+  const replaceImmediatelyType = event.replaceImmediatelyType;
 
-    if (!subscriptionId) {
-        throw new Error("subscription_id is a required key")
-    }
+  if (!subscriptionId) {
+    throw new Error("subscription_id is a required key");
+  }
 
-    if (turnOffAutoRenew && replaceImmediatelyType) {
-        throw new Error("Must provide either turnOffAutoRenew or replaceImmediatelyType")
-    }
+  if (turnOffAutoRenew && replaceImmediatelyType) {
+    throw new Error(
+      "Must provide either turnOffAutoRenew or replaceImmediatelyType"
+    );
+  }
 
-    if (!turnOffAutoRenew) {
-        const types = [
-            "end_current_subscription_and_bill",
-            "end_current_subscription_dont_bill",
-        ]
-        if (!types.includes(replaceImmediatelyType)) {
-            throw new Error("replaceImmediatelyType must be one of 'end_current_subscription_and_bill', 'end_current_subscription_dont_bill'")
-        }
+  if (!turnOffAutoRenew) {
+    const types = [
+      "end_current_subscription_and_bill",
+      "end_current_subscription_dont_bill",
+      "change_subscription_plan",
+    ];
+    if (!types.includes(replaceImmediatelyType)) {
+      throw new Error(
+        "replaceImmediatelyType must be one of 'end_current_subscription_and_bill', 'end_current_subscription_dont_bill', 'change_subscription_plan'"
+      );
     }
+  }
 }
 
 /**
  * Validate a "ChangeSubscription" event.
  */
 function validateChangeSubscriptionEvent(event: ChangeSubscriptionParams) {
-    if (!event.subscriptionId) {
-        throw new Error("subscriptionId is a required key")
-    }
+  if (!event.subscriptionId) {
+    throw new Error("subscriptionId is a required key");
+  }
 
-    if (!event.planId) {
-        throw new Error("planId is a required key")
-    }
+  if (!event.planId) {
+    throw new Error("planId is a required key");
+  }
 
-    const replace_immediately_type = event.replaceImmediatelyType
+  const replace_immediately_type = event.replaceImmediatelyType;
 
-    const types = [
-        "end_current_subscription_and_bill",
-        "end_current_subscription_dont_bill",
-        "change_subscription_plan"
-    ]
+  const types = [
+    "end_current_subscription_and_bill",
+    "end_current_subscription_dont_bill",
+    "change_subscription_plan",
+  ];
 
-    if (!replace_immediately_type) {
-        throw new Error("replaceImmediatelyType is a required key")
-    }
+  if (!replace_immediately_type) {
+    throw new Error("replaceImmediatelyType is a required key");
+  }
 
-    if (!types.includes(replace_immediately_type)) {
-        throw new Error("Invalid replace_immediately_type")
-    }
+  if (!types.includes(replace_immediately_type)) {
+    throw new Error("Invalid replace_immediately_type");
+  }
 }
 
 /**
  * Validate a "SubscriptionDetails" event.
  */
 function validateSubscriptionDetailsEvent(event: SubscriptionDetailsParams) {
-    if (!event.subscriptionId) {
-        throw new Error("subscription_id is a required key")
-    }
+  if (!event.subscriptionId) {
+    throw new Error("subscription_id is a required key");
+  }
 }
 
 /**
  * Validate a "Customer Access" event.
  */
-function validateCustomerAccessEvent(event: CustomerAccessParams) {
-    if (!event.customerId) {
-        throw new Error("customerId is a required key")
-    }
+function validateCustomerFeatureAccessEvent(event: CustomerFeatureAccess) {
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
 
-    if (event.eventName && event.featureName) {
-        throw new Error("Can't provide both featureName and eventName")
-    }
-
-    if (!event.eventName && !event.featureName) {
-        throw new Error("Must provide featureName or eventName")
-    }
+  if (!event.featureName) {
+    throw new Error("Can't provide both featureName and eventName");
+  }
 }
 
+/**
+ * Validate a "Customer Access" event.
+ */
+function validateCustomerMetricAccessEvent(event: CustomerMetricAccessParams) {
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
+
+  if (!event.eventName) {
+    throw new Error("Can't provide both featureName and eventName");
+  }
+}
 
 /**
  * Validate a "trackEvent" event.
  */
 function validateTrackEventEvent(event: TrackEvent) {
-    if (!event.batch || !event.batch.length) {
-        throw new Error("Messages batch can't be empty")
+  if (!event.batch || !event.batch.length) {
+    throw new Error("Messages batch can't be empty");
+  }
+
+  event.batch.forEach((messaage) => {
+    if (!messaage.customerId) {
+      throw new Error("customerId is a required key");
     }
 
-    event.batch.forEach(messaage => {
-        if (!messaage.customerId) {
-            throw new Error("customerId is a required key")
-        }
-
-        if (!messaage.eventName) {
-            throw new Error("eventName is a required key")
-        }
-    })
+    if (!messaage.eventName) {
+      throw new Error("eventName is a required key");
+    }
+  });
 }
