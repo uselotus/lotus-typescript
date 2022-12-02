@@ -2,6 +2,7 @@ export enum REQUEST_TYPES {
   GET = "GET",
   POST = "POST",
   PATCH = "PATCH",
+  DELETE = "DELETE",
 }
 
 export const REQUEST_URLS = {
@@ -10,8 +11,8 @@ export const REQUEST_URLS = {
   CREATE_BATCH_CUSTOMERS: "/api/batch_create_customers/",
   GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
   CREATE_SUBSCRIPTION: "/api/subscriptions/",
-  CANCEL_SUBSCRIPTION: (subscriptionId) =>
-    `/api/subscriptions/${subscriptionId}/`,
+  DELETE_SUBSCRIPTION: (subscriptionId) =>
+      `/api/subscriptions/${subscriptionId}/`,
   CHANGE_SUBSCRIPTION: (subscriptionId) =>
     `/api/subscriptions/${subscriptionId}/`,
   GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
@@ -28,7 +29,7 @@ export enum ValidateEventType {
   trackEvent = "trackEvent",
   customerDetails = "customerDetails",
   createSubscription = "createSubscription",
-  cancelSubscription = "cancelSubscription",
+  deleteSubscription = "deleteSubscription",
   changeSubscription = "changeSubscription",
   subscriptionDetails = "subscriptionDetails",
   customerMetricAccess = "customerMetricAccess",
@@ -60,6 +61,11 @@ export interface CustomerDetailsParams {
   customerId: string;
 }
 
+export interface subscriptionFilters {
+  propertyName: string;
+  value: string;
+}
+
 export interface CreateSubscriptionParams {
   customerId: string;
   planId: string;
@@ -69,26 +75,14 @@ export interface CreateSubscriptionParams {
   autoRenew?: boolean;
   isNew?: boolean;
   subscriptionId?: string;
-  subscriptionFilters?: {
-    propertyName: string;
-    value: string;
-  }[];
-}
-
-export interface CancelSubscriptionParams {
-  subscriptionId: string;
-  turnOffAutoRenew?: boolean;
-  replaceImmediatelyType?: string;
+  subscriptionFilters?: subscriptionFilters[];
 }
 
 export interface ChangeSubscriptionParams {
   subscriptionId: string;
-  planId: string;
+  replacePlanId?: string;
   turnOffAutoRenew?: boolean;
-  replaceImmediatelyType?:
-    | "end_current_subscription_and_bill"
-    | "end_current_subscription_dont_bill"
-    | "change_subscription_plan";
+  endDate?:string;
 }
 
 export interface SubscriptionDetailsParams {
@@ -138,4 +132,16 @@ export interface TrackEventEntity {
 
 export interface TrackEvent {
   batch: TrackEventEntity[];
+}
+
+export interface ListAllSubscriptionsParams {
+  customerId?: string;
+  planId?: string;
+  status?: string;
+}
+
+export interface DeleteSubscriptionParams {
+  subscriptionId: string;
+  billUsage?: boolean;
+  flatFeeBehavior?: "refund" | "prorate" | "charge_full";
 }
