@@ -9,16 +9,15 @@ import {
   CreateBatchCustomerParams,
   REQUEST_TYPES,
   CreateSubscriptionParams,
-  CancelSubscriptionParams,
   ChangeSubscriptionParams,
   SubscriptionDetailsParams,
   CustomerDetailsParams,
   REQUEST_URLS,
   TrackEvent,
   CustomerFeatureAccess,
-  CustomerMetricAccessResponse,
-  CustomerFeatureAccessResponse,
   CustomerMetricAccessParams,
+  ListAllSubscriptionsParams,
+  DeleteSubscriptionParams,
 } from "./data-types";
 
 const noop = () => {};
@@ -51,6 +50,7 @@ class Lotus {
     url: string,
     data?: any
   ) => {
+    Object.keys(data).forEach((k) => data[k] == null && delete data[k])
     if (!data) {
       return {
         method: method,
@@ -326,8 +326,14 @@ class Lotus {
     if (params.subscriptionId) {
       data["subscription_id"] = params.subscriptionId;
     }
-    if (params.subscriptionFilters) {
-      data["subscription_filters"] = params.subscriptionFilters;
+
+    if( params.subscriptionFilters?.length) {
+       data["subscription_filters"] = params.subscriptionFilters?.map(v => {
+         return {
+           property_name: v.propertyName,
+           value: v.value,
+         }
+       })
     }
 
     const req = this.getRequestObject(
@@ -339,34 +345,26 @@ class Lotus {
     return callReq(req);
   }
 
-  /**
-   * Cancel a Subscription.
-   * @return {Object}
-   * @param params
+    /**
+   * Delete a new Subscription.
+   *  @return {Object}
+   *  @param params
    *
    */
-  cancelSubscription(params: CancelSubscriptionParams) {
-    eventValidation(params, ValidateEventType.cancelSubscription);
-
-    const data = {};
-    const turn_off_auto_renew = params.turnOffAutoRenew;
-    const replace_immediately_type = params.replaceImmediatelyType;
-
-    if (turn_off_auto_renew) {
-      data["auto_renew"] = false;
-    } else {
-      data["status"] = "ended";
-      data["replace_immediately_type"] = replace_immediately_type;
+    async deleteSubscription(params: DeleteSubscriptionParams) {
+      eventValidation(params, ValidateEventType.deleteSubscription);
+      const data = {
+        bill_usage: params.billUsage,
+        flat_fee_behavior: params.flatFeeBehavior,
+      };
+      const req = this.getRequestObject(
+          REQUEST_TYPES.DELETE,
+          REQUEST_URLS.DELETE_SUBSCRIPTION(params.subscriptionId),
+          data
+      );
+      this.setRequestTimeout(req);
+      return callReq(req);
     }
-
-    const req = this.getRequestObject(
-      REQUEST_TYPES.PATCH,
-      REQUEST_URLS.CANCEL_SUBSCRIPTION(params.subscriptionId),
-      data
-    );
-    this.setRequestTimeout(req);
-    return callReq(req);
-  }
 
   /**
    * Change a Subscription.
@@ -377,9 +375,9 @@ class Lotus {
   changeSubscription(params: ChangeSubscriptionParams) {
     eventValidation(params, ValidateEventType.changeSubscription);
     const data = {
-      plan_id: params.planId,
-      replace_immediately_type: params.replaceImmediatelyType,
-      turn_off_auto_renew: params.turnOffAutoRenew,
+      replace_plan_id: params.replacePlanId || null,
+      turn_off_auto_renew: params.turnOffAutoRenew || false,
+      end_date: params.endDate || null,
     };
 
     const req = this.getRequestObject(
@@ -396,10 +394,20 @@ class Lotus {
    * Get all subscriptions.
    *
    */
-  async getAllSubscriptions() {
+  async getAllSubscriptions(params:ListAllSubscriptionsParams) {
+    let data;
+    if(!!Object.keys(params).length) {
+      data = {
+        customer_id: params.customerId || null,
+        plan_id: params.planId || null,
+        status: params.status || null,
+      }
+    }
+
     const req = this.getRequestObject(
-      REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_ALL_SUBSCRIPTIONS
+        REQUEST_TYPES.GET,
+        REQUEST_URLS.GET_ALL_SUBSCRIPTIONS,
+        data || null
     );
     this.setRequestTimeout(req);
     return callReq(req);
@@ -440,9 +448,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerFeatureAccess(
-    params: CustomerFeatureAccess
-  ): Promise<CustomerFeatureAccessResponse> {
+  async getCustomerFeatureAccess(params: CustomerFeatureAccess){
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
@@ -453,7 +459,7 @@ class Lotus {
     }
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_CUSTOMER_ACCESS,
+      REQUEST_URLS.GET_CUSTOMER_FEATURE_ACCESS,
       data
     );
     this.setRequestTimeout(req);
@@ -466,9 +472,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerMetricAccess(
-    params: CustomerMetricAccessParams
-  ): Promise<CustomerMetricAccessResponse> {
+  async getCustomerMetricAccess(params: CustomerMetricAccessParams){
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
@@ -476,7 +480,7 @@ class Lotus {
     };
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_CUSTOMER_ACCESS,
+      REQUEST_URLS.GET_CUSTOMER_METRIC_ACCESS,
       data
     );
     this.setRequestTimeout(req);

@@ -1,5 +1,4 @@
 import {
-  CancelSubscriptionParams,
   ChangeSubscriptionParams,
   CreateCustomerParams,
   CreateSubscriptionParams,
@@ -9,7 +8,7 @@ import {
   TrackEvent,
   CreateBatchCustomerParams,
   CustomerFeatureAccess,
-  CustomerMetricAccessParams,
+  CustomerMetricAccessParams, DeleteSubscriptionParams,
 } from "./data-types";
 
 /**
@@ -24,8 +23,6 @@ export function eventValidation(event, type) {
       return validateCustomerDetailsEvent(event);
     case ValidateEventType.createSubscription:
       return validateCreateSubscriptionEvent(event);
-    case ValidateEventType.cancelSubscription:
-      return validateCancelSubscriptionEvent(event);
     case ValidateEventType.changeSubscription:
       return validateChangeSubscriptionEvent(event);
     case ValidateEventType.subscriptionDetails:
@@ -38,6 +35,8 @@ export function eventValidation(event, type) {
       return validateTrackEventEvent(event);
     case ValidateEventType.createCustomersBatch:
       return validateCreateCustomersBatchEvent(event);
+    case ValidateEventType.deleteSubscription:
+      return validateDeleteSubscriptionEvent(event);
     default:
       throw new Error("Invalid Event Type");
   }
@@ -124,47 +123,18 @@ function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
     throw new Error("subscriptionFilters must be an array");
   }
 
-  if (event.subscriptionFilters && event.subscriptionFilters.length > 1) {
-    for (let i = 0; i < event.subscriptionFilters.length; i++) {
-      if (
-        !event.subscriptionFilters[i].propertyName ||
-        !event.subscriptionFilters[i].value
-      ) {
-        throw new Error("invalid subscriptionFilters");
+  const filters = event.subscriptionFilters || []
+
+  if (!!filters.length) {
+    filters.forEach(item => {
+      if (!("value" in item)) {
+        throw new Error("value of Subscription Filter cant be null");
       }
-    }
-  }
-}
+      if (!("propertyName" in item)) {
+        throw new Error("propertyName of Subscription Filter cant be null");
+      }
 
-/**
- * Validate a "CancelSubscription" event.
- */
-function validateCancelSubscriptionEvent(event: CancelSubscriptionParams) {
-  const subscriptionId = event.subscriptionId;
-  const turnOffAutoRenew = event.turnOffAutoRenew;
-  const replaceImmediatelyType = event.replaceImmediatelyType;
-
-  if (!subscriptionId) {
-    throw new Error("subscription_id is a required key");
-  }
-
-  if (turnOffAutoRenew && replaceImmediatelyType) {
-    throw new Error(
-      "Must provide either turnOffAutoRenew or replaceImmediatelyType"
-    );
-  }
-
-  if (!turnOffAutoRenew) {
-    const types = [
-      "end_current_subscription_and_bill",
-      "end_current_subscription_dont_bill",
-      "change_subscription_plan",
-    ];
-    if (!types.includes(replaceImmediatelyType)) {
-      throw new Error(
-        "replaceImmediatelyType must be one of 'end_current_subscription_and_bill', 'end_current_subscription_dont_bill', 'change_subscription_plan'"
-      );
-    }
+    })
   }
 }
 
@@ -174,26 +144,6 @@ function validateCancelSubscriptionEvent(event: CancelSubscriptionParams) {
 function validateChangeSubscriptionEvent(event: ChangeSubscriptionParams) {
   if (!event.subscriptionId) {
     throw new Error("subscriptionId is a required key");
-  }
-
-  if (!event.planId) {
-    throw new Error("planId is a required key");
-  }
-
-  const replace_immediately_type = event.replaceImmediatelyType;
-
-  const types = [
-    "end_current_subscription_and_bill",
-    "end_current_subscription_dont_bill",
-    "change_subscription_plan",
-  ];
-
-  if (!replace_immediately_type) {
-    throw new Error("replaceImmediatelyType is a required key");
-  }
-
-  if (!types.includes(replace_immediately_type)) {
-    throw new Error("Invalid replace_immediately_type");
   }
 }
 
@@ -249,4 +199,24 @@ function validateTrackEventEvent(event: TrackEvent) {
       throw new Error("eventName is a required key");
     }
   });
+}
+
+/**
+ * Validate a "DeleteSubscription" event.
+ */
+
+function validateDeleteSubscriptionEvent(event: DeleteSubscriptionParams) {
+
+  if (!event.subscriptionId) {
+    throw new Error("subscriptionId is a required key");
+  }
+
+
+  const allowed_types = [ "refund" , "prorate" , "charge_full"];
+
+  if (event.flatFeeBehavior && !allowed_types.includes(event.flatFeeBehavior)) {
+    throw new Error(
+      `flatFeeBehavior Must be one the these "refund","prorate", "charge_full"`
+    );
+  }
 }
