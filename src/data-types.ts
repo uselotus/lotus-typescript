@@ -20,6 +20,7 @@ export const REQUEST_URLS = {
   GET_CUSTOMER_FEATURE_ACCESS: "/api/customer_feature_access/",
   GET_CUSTOMER_METRIC_ACCESS: "/api/customer_metric_access/",
   TRACK_EVENT: "/api/track/",
+  GET_INVOICES: "/api/invoices/",
 };
 
 export enum ValidateEventType {
@@ -33,6 +34,7 @@ export enum ValidateEventType {
   customerMetricAccess = "customerMetricAccess",
   customerFeatureAccess = "customerFeatureAccess",
   createCustomersBatch = "createCustomersBatch",
+  getInvoices = "getInvoices",
 }
 
 export interface CreateCustomerParams {
@@ -81,6 +83,7 @@ export interface ChangeSubscriptionParams {
   planId?: string;
   subscriptionFilters?: subscriptionFilters[];
   replacePlanId?: string;
+  replacePlanInvoicingBehavior?: "add_to_next_invoice" | "invoice_now";
   turnOffAutoRenew?: boolean;
   endDate?: string;
 }
@@ -146,4 +149,9 @@ export interface CancelSubscriptionParams {
   invoicingBehaviorOnCancel?: "add_to_next_invoice" | "invoice_now";
   flatFeeBehavior?: "refund" | "prorate" | "charge_full";
   subscriptionFilters?: subscriptionFilters[];
+}
+
+export interface GetInvoicesParams {
+  customerId?: string;
+  paymentStatus?: "paid" | "unpaid";
 }

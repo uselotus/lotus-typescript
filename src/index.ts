@@ -18,6 +18,7 @@ import {
   CustomerMetricAccessParams,
   ListAllSubscriptionsParams,
   CancelSubscriptionParams,
+  GetInvoicesParams,
 } from "./data-types";
 
 const noop = () => {};
@@ -403,9 +404,11 @@ class Lotus {
       });
     }
 
-    const newparams = {
+    const newbody = {
       replace_plan_id: params.replacePlanId || null,
       turn_off_auto_renew: params.turnOffAutoRenew || null,
+      replace_plan_invoicing_behavior:
+        params.replacePlanInvoicingBehavior || null,
       end_date: params.endDate || null,
     };
 
@@ -413,7 +416,7 @@ class Lotus {
       REQUEST_TYPES.PATCH,
       REQUEST_URLS.CHANGE_SUBSCRIPTION,
       data,
-      newparams
+      newbody
     );
 
     this.setRequestTimeout(req);
@@ -513,6 +516,28 @@ class Lotus {
     const data = {
       customer_id: params.customerId,
       event_name: params.eventName,
+    };
+    const req = this.getRequestObject(
+      REQUEST_TYPES.GET,
+      REQUEST_URLS.GET_CUSTOMER_METRIC_ACCESS,
+      null,
+      data
+    );
+    this.setRequestTimeout(req);
+    return callReq(req);
+  }
+
+  /**
+   * Get invoices.
+   *
+   * @param params
+   *
+   */
+  async getInvoices(params: GetInvoicesParams) {
+    eventValidation(params, ValidateEventType.getInvoices);
+    const data = {
+      customer_id: params.customerId || null,
+      payment_status: params.paymentStatus || null,
     };
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
