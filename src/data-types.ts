@@ -10,11 +10,9 @@ export const REQUEST_URLS = {
   CREATE_CUSTOMERS: "/api/customers/",
   CREATE_BATCH_CUSTOMERS: "/api/batch_create_customers/",
   GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
-  CREATE_SUBSCRIPTION: "/api/subscriptions/",
-  DELETE_SUBSCRIPTION: (subscriptionId) =>
-      `/api/subscriptions/${subscriptionId}/`,
-  CHANGE_SUBSCRIPTION: (subscriptionId) =>
-    `/api/subscriptions/${subscriptionId}/`,
+  CREATE_SUBSCRIPTION: "/api/subscriptions/plans/",
+  CANCEL_SUBSCRIPTION: `/api/subscriptions/plans/`,
+  CHANGE_SUBSCRIPTION: `/api/subscriptions/plans/`,
   GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
   GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
     `/api/subscriptions/${subscriptionId}/`,
@@ -29,7 +27,7 @@ export enum ValidateEventType {
   trackEvent = "trackEvent",
   customerDetails = "customerDetails",
   createSubscription = "createSubscription",
-  deleteSubscription = "deleteSubscription",
+  cancelSubscription = "cancelSubscription",
   changeSubscription = "changeSubscription",
   subscriptionDetails = "subscriptionDetails",
   customerMetricAccess = "customerMetricAccess",
@@ -79,10 +77,12 @@ export interface CreateSubscriptionParams {
 }
 
 export interface ChangeSubscriptionParams {
-  subscriptionId: string;
+  customerId: string;
+  planId?: string;
+  subscriptionFilters?: subscriptionFilters[];
   replacePlanId?: string;
   turnOffAutoRenew?: boolean;
-  endDate?:string;
+  endDate?: string;
 }
 
 export interface SubscriptionDetailsParams {
@@ -92,13 +92,13 @@ export interface SubscriptionDetailsParams {
 export interface CustomerMetricAccessParams {
   customerId: string;
   eventName?: string;
-  subscription_filters?: object;
+  subscriptionFilters?: subscriptionFilters[];
 }
 
 export interface CustomerMetricAccessResponse {
   event_name: string;
   subscription_id: string;
-  subscription_filters: object;
+  subscription_filters: subscriptionFilters[];
   subscription_has_event: boolean;
   usage_per_metric: {
     metric_name: string;
@@ -112,13 +112,13 @@ export interface CustomerMetricAccessResponse {
 export interface CustomerFeatureAccess {
   customerId: string;
   featureName?: string;
-  subscription_filters?: object;
+  subscriptionFilters?: subscriptionFilters[];
 }
 
 export interface CustomerFeatureAccessResponse {
   feature: string;
   subscription_id: string;
-  subscription_filters: object;
+  subscription_filters: subscriptionFilters[];
   access: boolean;
 }
 
@@ -136,12 +136,14 @@ export interface TrackEvent {
 
 export interface ListAllSubscriptionsParams {
   customerId?: string;
-  planId?: string;
-  status?: string;
+  status?: "active" | "ended" | "not_started";
 }
 
-export interface DeleteSubscriptionParams {
-  subscriptionId: string;
+export interface CancelSubscriptionParams {
+  planId: string;
   billUsage?: boolean;
+  customerId: string;
+  invoicingBehaviorOnCancel?: "add_to_next_invoice" | "invoice_now";
   flatFeeBehavior?: "refund" | "prorate" | "charge_full";
+  subscriptionFilters?: subscriptionFilters[];
 }

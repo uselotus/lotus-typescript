@@ -17,7 +17,7 @@ import {
   CustomerFeatureAccess,
   CustomerMetricAccessParams,
   ListAllSubscriptionsParams,
-  DeleteSubscriptionParams,
+  CancelSubscriptionParams,
 } from "./data-types";
 
 const noop = () => {};
@@ -48,21 +48,35 @@ class Lotus {
   private getRequestObject = (
     method: REQUEST_TYPES,
     url: string,
-    data?: any
+    data?: any,
+    params?: any
   ) => {
-    Object.keys(data).forEach((k) => data[k] == null && delete data[k])
-    if (!data) {
+    Object.keys(data).forEach((k) => data[k] == null && delete data[k]);
+    Object.keys(params).forEach((p) => params[p] == null && delete data[p]);
+
+    if (!data && params) {
       return {
         method: method,
         url: this.getRequestUrl(url),
         headers: this.headers,
+        params: params,
+      };
+    }
+
+    if (!params && data) {
+      return {
+        method: method,
+        url: this.getRequestUrl(url),
+        headers: this.headers,
+        body: data,
       };
     }
 
     return {
       method: method,
       url: this.getRequestUrl(url),
-      data,
+      params: params,
+      body: data,
       headers: this.headers,
     };
   };
@@ -327,13 +341,13 @@ class Lotus {
       data["subscription_id"] = params.subscriptionId;
     }
 
-    if( params.subscriptionFilters?.length) {
-       data["subscription_filters"] = params.subscriptionFilters?.map(v => {
-         return {
-           property_name: v.propertyName,
-           value: v.value,
-         }
-       })
+    if (params.subscriptionFilters?.length) {
+      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
+        return {
+          property_name: v.propertyName,
+          value: v.value,
+        };
+      });
     }
 
     const req = this.getRequestObject(
@@ -345,26 +359,27 @@ class Lotus {
     return callReq(req);
   }
 
-    /**
+  /**
    * Delete a new Subscription.
    *  @return {Object}
    *  @param params
    *
    */
-    async deleteSubscription(params: DeleteSubscriptionParams) {
-      eventValidation(params, ValidateEventType.deleteSubscription);
-      const data = {
-        bill_usage: params.billUsage,
-        flat_fee_behavior: params.flatFeeBehavior,
-      };
-      const req = this.getRequestObject(
-          REQUEST_TYPES.DELETE,
-          REQUEST_URLS.DELETE_SUBSCRIPTION(params.subscriptionId),
-          data
-      );
-      this.setRequestTimeout(req);
-      return callReq(req);
-    }
+  async cancelSubscription(params: CancelSubscriptionParams) {
+    eventValidation(params, ValidateEventType.cancelSubscription);
+    const data = {
+      bill_usage: params.billUsage,
+      flat_fee_behavior: params.flatFeeBehavior,
+    };
+    const req = this.getRequestObject(
+      REQUEST_TYPES.DELETE,
+      REQUEST_URLS.CANCEL_SUBSCRIPTION,
+      null,
+      data
+    );
+    this.setRequestTimeout(req);
+    return callReq(req);
+  }
 
   /**
    * Change a Subscription.
@@ -375,15 +390,30 @@ class Lotus {
   changeSubscription(params: ChangeSubscriptionParams) {
     eventValidation(params, ValidateEventType.changeSubscription);
     const data = {
+      plan_id: params.planId || null,
+      customer_id: params.customerId || false,
+    };
+
+    if (params.subscriptionFilters?.length) {
+      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
+        return {
+          property_name: v.propertyName,
+          value: v.value,
+        };
+      });
+    }
+
+    const newparams = {
       replace_plan_id: params.replacePlanId || null,
-      turn_off_auto_renew: params.turnOffAutoRenew || false,
+      turn_off_auto_renew: params.turnOffAutoRenew || null,
       end_date: params.endDate || null,
     };
 
     const req = this.getRequestObject(
       REQUEST_TYPES.PATCH,
-      REQUEST_URLS.CHANGE_SUBSCRIPTION(params.subscriptionId),
-      data
+      REQUEST_URLS.CHANGE_SUBSCRIPTION,
+      data,
+      newparams
     );
 
     this.setRequestTimeout(req);
@@ -394,20 +424,20 @@ class Lotus {
    * Get all subscriptions.
    *
    */
-  async getAllSubscriptions(params:ListAllSubscriptionsParams) {
+  async getAllSubscriptions(params: ListAllSubscriptionsParams) {
     let data;
-    if(!!Object.keys(params).length) {
+    if (!!Object.keys(params).length) {
       data = {
         customer_id: params.customerId || null,
-        plan_id: params.planId || null,
         status: params.status || null,
-      }
+      };
     }
 
     const req = this.getRequestObject(
-        REQUEST_TYPES.GET,
-        REQUEST_URLS.GET_ALL_SUBSCRIPTIONS,
-        data || null
+      REQUEST_TYPES.GET,
+      REQUEST_URLS.GET_ALL_SUBSCRIPTIONS,
+      null,
+      data
     );
     this.setRequestTimeout(req);
     return callReq(req);
@@ -448,18 +478,24 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerFeatureAccess(params: CustomerFeatureAccess){
+  async getCustomerFeatureAccess(params: CustomerFeatureAccess) {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
       feature_name: params.featureName,
     };
-    if (params.featureName) {
-      data["feature_name"] = params.featureName;
+    if (params.subscriptionFilters?.length) {
+      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
+        return {
+          property_name: v.propertyName,
+          value: v.value,
+        };
+      });
     }
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMER_FEATURE_ACCESS,
+      null,
       data
     );
     this.setRequestTimeout(req);
@@ -472,7 +508,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerMetricAccess(params: CustomerMetricAccessParams){
+  async getCustomerMetricAccess(params: CustomerMetricAccessParams) {
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
@@ -481,6 +517,7 @@ class Lotus {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMER_METRIC_ACCESS,
+      null,
       data
     );
     this.setRequestTimeout(req);

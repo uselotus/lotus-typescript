@@ -8,7 +8,8 @@ import {
   TrackEvent,
   CreateBatchCustomerParams,
   CustomerFeatureAccess,
-  CustomerMetricAccessParams, DeleteSubscriptionParams,
+  CustomerMetricAccessParams,
+  CancelSubscriptionParams,
 } from "./data-types";
 
 /**
@@ -35,7 +36,7 @@ export function eventValidation(event, type) {
       return validateTrackEventEvent(event);
     case ValidateEventType.createCustomersBatch:
       return validateCreateCustomersBatchEvent(event);
-    case ValidateEventType.deleteSubscription:
+    case ValidateEventType.cancelSubscription:
       return validateDeleteSubscriptionEvent(event);
     default:
       throw new Error("Invalid Event Type");
@@ -123,18 +124,17 @@ function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
     throw new Error("subscriptionFilters must be an array");
   }
 
-  const filters = event.subscriptionFilters || []
+  const filters = event.subscriptionFilters || [];
 
   if (!!filters.length) {
-    filters.forEach(item => {
+    filters.forEach((item) => {
       if (!("value" in item)) {
         throw new Error("value of Subscription Filter cant be null");
       }
       if (!("propertyName" in item)) {
         throw new Error("propertyName of Subscription Filter cant be null");
       }
-
-    })
+    });
   }
 }
 
@@ -142,8 +142,14 @@ function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
  * Validate a "ChangeSubscription" event.
  */
 function validateChangeSubscriptionEvent(event: ChangeSubscriptionParams) {
-  if (!event.subscriptionId) {
-    throw new Error("subscriptionId is a required key");
+  if (!event.planId) {
+    throw new Error("planId is a required key");
+  }
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
+  if (event.subscriptionFilters && !Array.isArray(event.subscriptionFilters)) {
+    throw new Error("subscriptionFilters must be an array");
   }
 }
 
@@ -205,14 +211,15 @@ function validateTrackEventEvent(event: TrackEvent) {
  * Validate a "DeleteSubscription" event.
  */
 
-function validateDeleteSubscriptionEvent(event: DeleteSubscriptionParams) {
-
-  if (!event.subscriptionId) {
-    throw new Error("subscriptionId is a required key");
+function validateDeleteSubscriptionEvent(event: CancelSubscriptionParams) {
+  if (!event.planId) {
+    throw new Error("planId is a required key");
+  }
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
   }
 
-
-  const allowed_types = [ "refund" , "prorate" , "charge_full"];
+  const allowed_types = ["refund", "prorate", "charge_full"];
 
   if (event.flatFeeBehavior && !allowed_types.includes(event.flatFeeBehavior)) {
     throw new Error(
