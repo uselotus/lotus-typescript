@@ -142,9 +142,6 @@ function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
  * Validate a "ChangeSubscription" event.
  */
 function validateChangeSubscriptionEvent(event: ChangeSubscriptionParams) {
-  if (!event.planId) {
-    throw new Error("planId is a required key");
-  }
   if (!event.customerId) {
     throw new Error("customerId is a required key");
   }
@@ -171,7 +168,11 @@ function validateCustomerFeatureAccessEvent(event: CustomerFeatureAccess) {
   }
 
   if (!event.featureName) {
-    throw new Error("Can't provide both featureName and eventName");
+    throw new Error("featureName is a required key");
+  }
+
+  if (event.subscriptionFilters && !Array.isArray(event.subscriptionFilters)) {
+    throw new Error("subscriptionFilters must be an array");
   }
 }
 
@@ -184,7 +185,11 @@ function validateCustomerMetricAccessEvent(event: CustomerMetricAccessParams) {
   }
 
   if (!event.eventName) {
-    throw new Error("Can't provide both featureName and eventName");
+     throw new Error("customerId is a required key");
+  }
+
+  if (event.subscriptionFilters && !Array.isArray(event.subscriptionFilters)) {
+    throw new Error("subscriptionFilters must be an array");
   }
 }
 

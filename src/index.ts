@@ -53,8 +53,13 @@ class Lotus {
     data?: any,
     params?: any
   ) => {
-    Object.keys(data).forEach((k) => data[k] == null && delete data[k]);
-    Object.keys(params).forEach((p) => params[p] == null && delete data[p]);
+    if(data) {
+       Object.keys(data).forEach((k) => data[k] == null && delete data[k]);
+    }
+
+    // if(params) {
+    //    Object.keys(params).forEach((p) => params[p] == null && delete data[p]);
+    // }
 
     if (!data && params) {
       return {
@@ -70,7 +75,7 @@ class Lotus {
         method: method,
         url: this.getRequestUrl(url),
         headers: this.headers,
-        body: data,
+        data: data,
       };
     }
 
@@ -362,7 +367,7 @@ class Lotus {
   }
 
   /**
-   * Delete a new Subscription.
+   * Delete a Subscription.
    *  @return {Object}
    *  @param params
    *
@@ -534,6 +539,15 @@ class Lotus {
       customer_id: params.customerId,
       event_name: params.eventName,
     };
+
+    if (params.subscriptionFilters?.length) {
+      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
+        return {
+          property_name: v.propertyName,
+          value: v.value,
+        };
+      });
+    }
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMER_METRIC_ACCESS,
@@ -551,14 +565,13 @@ class Lotus {
    *
    */
   async getInvoices(params: GetInvoicesParams) {
-    eventValidation(params, ValidateEventType.getInvoices);
     const data = {
       customer_id: params.customerId || null,
       payment_status: params.paymentStatus || null,
     };
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_CUSTOMER_METRIC_ACCESS,
+      REQUEST_URLS.GET_INVOICES,
       null,
       data
     );
