@@ -3,6 +3,7 @@ import axios from "axios";
 import axiosRetry from "axios-retry";
 import ms from "ms";
 import { eventValidation } from "./event-validation";
+import { stringify } from "qs";
 import {
   ValidateEventType,
   CreateCustomerParams,
@@ -371,13 +372,27 @@ class Lotus {
     const data = {
       bill_usage: params.billUsage,
       flat_fee_behavior: params.flatFeeBehavior,
+      plan_id: params.planId,
+      customer_id: params.customerId,
     };
+
+    if (params.subscriptionFilters?.length) {
+      data["subscription_filters"] = stringify(
+        params.subscriptionFilters?.map((v) => {
+          return {
+            property_name: v.propertyName,
+            value: v.value,
+          };
+        })
+      );
+    }
     const req = this.getRequestObject(
       REQUEST_TYPES.DELETE,
       REQUEST_URLS.CANCEL_SUBSCRIPTION,
       null,
       data
     );
+
     this.setRequestTimeout(req);
     return callReq(req);
   }
@@ -396,12 +411,14 @@ class Lotus {
     };
 
     if (params.subscriptionFilters?.length) {
-      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
-        return {
-          property_name: v.propertyName,
-          value: v.value,
-        };
-      });
+      data["subscription_filters"] = stringify(
+        params.subscriptionFilters?.map((v) => {
+          return {
+            property_name: v.propertyName,
+            value: v.value,
+          };
+        })
+      );
     }
 
     const newbody = {
@@ -415,8 +432,8 @@ class Lotus {
     const req = this.getRequestObject(
       REQUEST_TYPES.PATCH,
       REQUEST_URLS.CHANGE_SUBSCRIPTION,
-      data,
-      newbody
+      newbody,
+      data
     );
 
     this.setRequestTimeout(req);
