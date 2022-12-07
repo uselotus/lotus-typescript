@@ -1,8 +1,8 @@
 {
   "name": "lotus-typescript",
-  "version": "1.0.12",
-  "description": "Typescript sdk for uselotus apis",
-  "main": "dist/index.js",
+  "version": "1.0.14",
+  "description": "Typescript sdk for Lotus APIs",
+  "main": "dist/index.ts",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
