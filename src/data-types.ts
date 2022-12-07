@@ -94,27 +94,13 @@ export interface SubscriptionDetailsParams {
 
 export interface CustomerMetricAccessParams {
   customerId: string;
-  eventName?: string;
+  eventName: string;
   subscriptionFilters?: subscriptionFilters[];
-}
-
-export interface CustomerMetricAccessResponse {
-  event_name: string;
-  subscription_id: string;
-  subscription_filters: subscriptionFilters[];
-  subscription_has_event: boolean;
-  usage_per_metric: {
-    metric_name: string;
-    metric_id: string;
-    metric_usage: number;
-    metric_free_limit: number;
-    metric_total_limit: number;
-  }[];
 }
 
 export interface CustomerFeatureAccess {
   customerId: string;
-  featureName?: string;
+  featureName: string;
   subscriptionFilters?: subscriptionFilters[];
 }
 
