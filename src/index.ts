@@ -53,8 +53,8 @@ class Lotus {
     data?: any,
     params?: any
   ) => {
-    if(data) {
-       Object.keys(data).forEach((k) => data[k] == null && delete data[k]);
+    if (data) {
+      Object.keys(data).forEach((k) => data[k] == null && delete data[k]);
     }
 
     // if(params) {
