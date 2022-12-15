@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
+import axios, {AxiosResponse} from "axios";
 import axiosRetry from "axios-retry";
 import ms from "ms";
 import { eventValidation } from "./event-validation";
@@ -21,6 +21,14 @@ import {
   CancelSubscriptionParams,
   GetInvoicesParams,
 } from "./data-types";
+import {
+  ChangeSubscription,
+  CreateCustomer,
+  CreateCustomersBatch,
+  CreateSubscription,
+  Customer,
+  CustomerDetails, CustomerMetricAccess, Invoices, Subscription
+} from "./responses";
 
 const noop = () => {};
 
@@ -235,7 +243,7 @@ class Lotus {
    *
    * @return {Object} (Array of customers)
    */
-  async getCustomers() {
+  async getCustomers(): Promise<AxiosResponse<Customer[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMERS
@@ -247,10 +255,10 @@ class Lotus {
   /**
    * Get Customer Detail.
    *
-   * @return {Object}
+   * @return {Object} (customers Details)
    * @param message
    */
-  async getCustomerDetail(message: CustomerDetailsParams) {
+  async getCustomerDetail(message: CustomerDetailsParams) : Promise<AxiosResponse<CustomerDetails>> {
     eventValidation(message, ValidateEventType.customerDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -266,7 +274,7 @@ class Lotus {
    * @param params
    *
    */
-  async createCustomer(params: CreateCustomerParams) {
+  async createCustomer(params: CreateCustomerParams): Promise<AxiosResponse<CreateCustomer>> {
     eventValidation(params, ValidateEventType.createCustomer);
     const data = {
       customer_id: params.customerId,
@@ -291,7 +299,7 @@ class Lotus {
    * @param params
    *
    */
-  async createCustomersBatch(params: CreateBatchCustomerParams) {
+  async createCustomersBatch(params: CreateBatchCustomerParams): Promise<AxiosResponse<CreateCustomersBatch>> {
     eventValidation(params, ValidateEventType.createCustomersBatch);
 
     const customers = params.customers.map((customer) => {
@@ -325,7 +333,7 @@ class Lotus {
    *  @param params
    *
    */
-  async createSubscription(params: CreateSubscriptionParams) {
+  async createSubscription(params: CreateSubscriptionParams) : Promise<AxiosResponse<CreateSubscription>> {
     eventValidation(params, ValidateEventType.createSubscription);
     const data = {
       customer_id: params.customerId,
@@ -408,7 +416,7 @@ class Lotus {
    * @param params
    *
    */
-  changeSubscription(params: ChangeSubscriptionParams) {
+  changeSubscription(params: ChangeSubscriptionParams): Promise<AxiosResponse<ChangeSubscription>> {
     eventValidation(params, ValidateEventType.changeSubscription);
     const data = {
       plan_id: params.planId || null,
@@ -449,7 +457,7 @@ class Lotus {
    * Get all subscriptions.
    *
    */
-  async getAllSubscriptions(params: ListAllSubscriptionsParams) {
+  async getAllSubscriptions(params: ListAllSubscriptionsParams): Promise<AxiosResponse<Subscription[]>> {
     let data;
     if (!!Object.keys(params).length) {
       data = {
@@ -503,7 +511,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerFeatureAccess(params: CustomerFeatureAccess) {
+  async getCustomerFeatureAccess(params: CustomerFeatureAccess) : Promise<AxiosResponse<CustomerFeatureAccess[]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
@@ -533,7 +541,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerMetricAccess(params: CustomerMetricAccessParams) {
+  async getCustomerMetricAccess(params: CustomerMetricAccessParams) : Promise<AxiosResponse<CustomerMetricAccess[]>>{
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
@@ -564,7 +572,7 @@ class Lotus {
    * @param params
    *
    */
-  async getInvoices(params: GetInvoicesParams) {
+  async getInvoices(params: GetInvoicesParams) : Promise<AxiosResponse<Invoices[]>>{
     const data = {
       customer_id: params.customerId || null,
       payment_status: params.paymentStatus || null,
