@@ -128,11 +128,11 @@ class Lotus {
     this.headers = {
       "X-API-KEY": this.apiKey,
     };
-    axiosRetry(axios, {
-      retries: options.retryCount || 3,
-      retryCondition: this._isErrorRetryable,
-      retryDelay: axiosRetry.exponentialDelay,
-    });
+    // axiosRetry(axios, {
+    //   retries: options.retryCount || 3,
+    //   retryCondition: this._isErrorRetryable,
+    //   retryDelay: axiosRetry.exponentialDelay,
+    // });
   }
 
   /**
@@ -168,6 +168,7 @@ class Lotus {
     }
 
     if (this.flushInterval && !this.timer) {
+      // @ts-ignore
       this.timer = setTimeout(() => this.flush(), this.flushInterval);
     }
   }
