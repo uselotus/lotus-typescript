@@ -17,8 +17,7 @@ export const REQUEST_URLS = {
   GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
     `/api/subscriptions/${subscriptionId}/`,
   GET_ALL_PLANS: "/api/plans/",
-  GET_PLAN_DETAILS: (planId) =>
-    `/api/plans/${planId}/`,
+  GET_PLAN_DETAILS: (planId) => `/api/plans/${planId}/`,
   GET_CUSTOMER_FEATURE_ACCESS: "/api/customer_feature_access/",
   GET_CUSTOMER_METRIC_ACCESS: "/api/customer_metric_access/",
   TRACK_EVENT: "/api/track/",
