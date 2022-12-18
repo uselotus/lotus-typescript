@@ -6,17 +6,19 @@ export enum REQUEST_TYPES {
 }
 
 export const REQUEST_URLS = {
-  GET_CUSTOMERS: "/api/customers/",
-  CREATE_CUSTOMERS: "/api/customers/",
+  GET_CUSTOMERS: "/app/customers/",
+  CREATE_CUSTOMERS: "/app/customers/",
   CREATE_BATCH_CUSTOMERS: "/api/batch_create_customers/",
-  GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
-  CREATE_SUBSCRIPTION: "/api/subscriptions/plans/",
-  CANCEL_SUBSCRIPTION: `/api/subscriptions/plans/`,
-  CHANGE_SUBSCRIPTION: `/api/subscriptions/plans/`,
-  GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
+  GET_CUSTOMER_DETAIL: (customerId) => `/app/customers/${customerId}/`,
+  CREATE_SUBSCRIPTION: "/app/subscriptions/",
+  CANCEL_SUBSCRIPTION: `/app/subscriptions/cancel/`,
+  CHANGE_SUBSCRIPTION: `/app/subscriptions/update/`,
+  GET_ALL_SUBSCRIPTIONS: "/app/subscriptions/",
   GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
-    `/api/subscriptions/${subscriptionId}/`,
+    `/app/subscriptions/${subscriptionId}/`,
   GET_ALL_PLANS: "/api/plans/",
+  GET_PLAN_DETAILS: (planId) =>
+    `/api/plans/${planId}/`,
   GET_CUSTOMER_FEATURE_ACCESS: "/api/customer_feature_access/",
   GET_CUSTOMER_METRIC_ACCESS: "/api/customer_metric_access/",
   TRACK_EVENT: "/api/track/",
@@ -31,6 +33,7 @@ export enum ValidateEventType {
   cancelSubscription = "cancelSubscription",
   changeSubscription = "changeSubscription",
   subscriptionDetails = "subscriptionDetails",
+  planDetails = "planDetails",
   customerMetricAccess = "customerMetricAccess",
   customerFeatureAccess = "customerFeatureAccess",
   createCustomersBatch = "createCustomersBatch",
@@ -90,6 +93,10 @@ export interface ChangeSubscriptionParams {
 
 export interface SubscriptionDetailsParams {
   subscriptionId: string;
+}
+
+export interface PlanDetailsParams {
+  planId: string;
 }
 
 export interface CustomerMetricAccessParams {

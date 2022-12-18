@@ -9,7 +9,7 @@ import {
   CreateBatchCustomerParams,
   CustomerFeatureAccess,
   CustomerMetricAccessParams,
-  CancelSubscriptionParams,
+  CancelSubscriptionParams, PlanDetailsParams,
 } from "./data-types";
 
 /**
@@ -28,6 +28,8 @@ export function eventValidation(event, type) {
       return validateChangeSubscriptionEvent(event);
     case ValidateEventType.subscriptionDetails:
       return validateSubscriptionDetailsEvent(event);
+    case ValidateEventType.planDetails:
+      return validatePlanDetailsEvent(event);
     case ValidateEventType.customerMetricAccess:
       return validateCustomerMetricAccessEvent(event);
     case ValidateEventType.customerFeatureAccess:
@@ -230,5 +232,14 @@ function validateDeleteSubscriptionEvent(event: CancelSubscriptionParams) {
     throw new Error(
       `flatFeeBehavior Must be one the these "refund","prorate", "charge_full"`
     );
+  }
+}
+
+/**
+ * Validate a "PlanDetails" event.
+ */
+function validatePlanDetailsEvent(event: PlanDetailsParams) {
+  if (!event.planId) {
+    throw new Error("planId is a required key");
   }
 }
