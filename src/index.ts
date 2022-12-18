@@ -19,7 +19,7 @@ import {
   CustomerMetricAccessParams,
   ListAllSubscriptionsParams,
   CancelSubscriptionParams,
-  GetInvoicesParams,
+  GetInvoicesParams, PlanDetailsParams,
 } from "./data-types";
 import {
   ChangeSubscription,
@@ -38,7 +38,8 @@ const setImmediate = (functionToExecute, args?: any) => {
 
 const callReq = async (req) => {
   try {
-    return axios(req);
+    const result =  await axios(req);
+    return result.data
   } catch (error) {
     throw new Error(error);
   }
@@ -225,7 +226,7 @@ class Lotus {
    * @param {Function} [callback] (optional)
    * @return {Lotus}
    */
-  trackEvent(message, callback) {
+  track_event(message, callback) {
     eventValidation(message, ValidateEventType.trackEvent);
 
     const properties = Object.assign({}, message.properties, {
@@ -244,7 +245,7 @@ class Lotus {
    *
    * @return {Object} (Array of customers)
    */
-  async getCustomers(): Promise<AxiosResponse<Customer[]>> {
+  async get_customers(): Promise<AxiosResponse<Customer[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMERS
@@ -259,7 +260,7 @@ class Lotus {
    * @return {Object} (customers Details)
    * @param message
    */
-  async getCustomerDetail(message: CustomerDetailsParams) : Promise<AxiosResponse<CustomerDetails>> {
+  async get_customer_details(message: CustomerDetailsParams) : Promise<AxiosResponse<CustomerDetails>> {
     eventValidation(message, ValidateEventType.customerDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -275,7 +276,7 @@ class Lotus {
    * @param params
    *
    */
-  async createCustomer(params: CreateCustomerParams): Promise<AxiosResponse<CreateCustomer>> {
+  async create_customer(params: CreateCustomerParams): Promise<AxiosResponse<CreateCustomer>> {
     eventValidation(params, ValidateEventType.createCustomer);
     const data = {
       customer_id: params.customerId,
@@ -300,7 +301,7 @@ class Lotus {
    * @param params
    *
    */
-  async createCustomersBatch(params: CreateBatchCustomerParams): Promise<AxiosResponse<CreateCustomersBatch>> {
+  async create_customer_batch(params: CreateBatchCustomerParams): Promise<AxiosResponse<CreateCustomersBatch>> {
     eventValidation(params, ValidateEventType.createCustomersBatch);
 
     const customers = params.customers.map((customer) => {
@@ -334,7 +335,7 @@ class Lotus {
    *  @param params
    *
    */
-  async createSubscription(params: CreateSubscriptionParams) : Promise<AxiosResponse<CreateSubscription>> {
+  async create_subscription(params: CreateSubscriptionParams) : Promise<AxiosResponse<CreateSubscription>> {
     eventValidation(params, ValidateEventType.createSubscription);
     const data = {
       customer_id: params.customerId,
@@ -381,7 +382,7 @@ class Lotus {
    *  @param params
    *
    */
-  async cancelSubscription(params: CancelSubscriptionParams) {
+  async cancel_subscription(params: CancelSubscriptionParams) {
     eventValidation(params, ValidateEventType.cancelSubscription);
     const data = {
       bill_usage: params.billUsage,
@@ -417,7 +418,7 @@ class Lotus {
    * @param params
    *
    */
-  changeSubscription(params: ChangeSubscriptionParams): Promise<AxiosResponse<ChangeSubscription>> {
+  async change_subscription(params: ChangeSubscriptionParams): Promise<AxiosResponse<ChangeSubscription>> {
     eventValidation(params, ValidateEventType.changeSubscription);
     const data = {
       plan_id: params.planId || null,
@@ -458,7 +459,7 @@ class Lotus {
    * Get all subscriptions.
    *
    */
-  async getAllSubscriptions(params: ListAllSubscriptionsParams): Promise<AxiosResponse<Subscription[]>> {
+  async get_all_subscriptions(params: ListAllSubscriptionsParams): Promise<AxiosResponse<Subscription[]>> {
     let data;
     if (!!Object.keys(params).length) {
       data = {
@@ -483,7 +484,7 @@ class Lotus {
    * @param params
    *
    */
-  async getSubscriptionDetails(params: SubscriptionDetailsParams) {
+  async get_subscription_details(params: SubscriptionDetailsParams) {
     eventValidation(params, ValidateEventType.subscriptionDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -497,10 +498,27 @@ class Lotus {
    * Get All plans.
    *
    */
-  async getAllPlans() {
+  async get_all_plans() {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_ALL_PLANS
+    );
+    this.setRequestTimeout(req);
+    return callReq(req);
+  }
+
+
+  /**
+   * Get plan details. planId
+   *
+   * @param params
+   *
+   */
+  async get_plan_details(params: PlanDetailsParams) {
+    eventValidation(params, ValidateEventType.planDetails);
+    const req = this.getRequestObject(
+      REQUEST_TYPES.GET,
+      REQUEST_URLS.GET_PLAN_DETAILS(params.planId)
     );
     this.setRequestTimeout(req);
     return callReq(req);
@@ -512,7 +530,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerFeatureAccess(params: CustomerFeatureAccess) : Promise<AxiosResponse<CustomerFeatureAccess[]>> {
+  async get_customer_feature_access(params: CustomerFeatureAccess) : Promise<AxiosResponse<CustomerFeatureAccess[]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
@@ -542,7 +560,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerMetricAccess(params: CustomerMetricAccessParams) : Promise<AxiosResponse<CustomerMetricAccess[]>>{
+  async get_customer_metric_access(params: CustomerMetricAccessParams) : Promise<AxiosResponse<CustomerMetricAccess[]>>{
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
@@ -573,7 +591,7 @@ class Lotus {
    * @param params
    *
    */
-  async getInvoices(params: GetInvoicesParams) : Promise<AxiosResponse<Invoices[]>>{
+  async get_invoices(params: GetInvoicesParams) : Promise<AxiosResponse<Invoices[]>>{
     const data = {
       customer_id: params.customerId || null,
       payment_status: params.paymentStatus || null,
