@@ -6,16 +6,16 @@ export enum REQUEST_TYPES {
 }
 
 export const REQUEST_URLS = {
-  GET_CUSTOMERS: "/app/customers/",
-  CREATE_CUSTOMERS: "/app/customers/",
+  GET_CUSTOMERS: "/api/customers/",
+  CREATE_CUSTOMERS: "/api/customers/",
   CREATE_BATCH_CUSTOMERS: "/api/batch_create_customers/",
-  GET_CUSTOMER_DETAIL: (customerId) => `/app/customers/${customerId}/`,
-  CREATE_SUBSCRIPTION: "/app/subscriptions/",
-  CANCEL_SUBSCRIPTION: `/app/subscriptions/cancel/`,
-  CHANGE_SUBSCRIPTION: `/app/subscriptions/update/`,
-  GET_ALL_SUBSCRIPTIONS: "/app/subscriptions/",
+  GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
+  CREATE_SUBSCRIPTION: "/api/subscriptions/add",
+  CANCEL_SUBSCRIPTION: `/api/subscriptions/plans/cancel/`,
+  CHANGE_SUBSCRIPTION: `/api/subscriptions/plans/update/`,
+  GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
   GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
-    `/app/subscriptions/${subscriptionId}/`,
+    `/api/subscriptions/${subscriptionId}/`,
   GET_ALL_PLANS: "/api/plans/",
   GET_PLAN_DETAILS: (planId) =>
     `/api/plans/${planId}/`,

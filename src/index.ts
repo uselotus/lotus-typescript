@@ -41,6 +41,7 @@ const callReq = async (req) => {
   try {
     return await axios(req)
   } catch (error) {
+    console.log(error)
     throw new Error(error)
   }
 };
