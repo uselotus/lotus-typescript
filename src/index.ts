@@ -29,6 +29,7 @@ import {
   Customer,
   CustomerDetails, CustomerMetricAccess, Invoices, Subscription
 } from "./responses";
+import * as url from "url";
 
 const noop = () => {};
 
@@ -38,12 +39,17 @@ const setImmediate = (functionToExecute, args?: any) => {
 
 const callReq = async (req) => {
   try {
-    const result =  await axios(req);
-    return result.data
+    return await axios(req)
   } catch (error) {
-    throw new Error(error);
+    throw new Error(error)
   }
 };
+
+async function getFirstAlbumTitle() {
+  const response = await axios.get("https://jsonplaceholder.typicode.com/albums");
+  return response.data[0].title;
+}
+
 
 class Lotus {
   private readonly host: any;
