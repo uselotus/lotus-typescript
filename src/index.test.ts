@@ -141,12 +141,11 @@ describe("Testing Invoices", () => {
 
 describe("Testing Subscriptions Endpoints", () => {
   it("Test Get All Subscriptions", async () => {
-    const result = await lotus.listSubscriptions({});
+    const result = await lotus.listSubscriptions({customerId: "1212"});
     expect(result.status).toEqual(200);
     const subscriptions = result.data?.length ? result.data[0] : null;
     console.log(subscriptions, result);
   });
-
 
   it("Test Create/Add Subscription", async () => {
     const result = await lotus.createSubscription({

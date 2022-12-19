@@ -36,6 +36,7 @@ export enum ValidateEventType {
   customerFeatureAccess = "customerFeatureAccess",
   createCustomersBatch = "createCustomersBatch",
   getInvoices = "getInvoices",
+  listSubscriptions = "listSubscriptions",
 }
 
 export interface CreateCustomerParams {
@@ -45,7 +46,6 @@ export interface CreateCustomerParams {
   paymentProviderId?: string;
   customerName?: string;
   properties?: string;
-  integrations?: string;
   default_currency_code?: string;
 }
 
@@ -72,21 +72,9 @@ export interface CreateSubscriptionParams {
   planId: string;
   startDate: string;
   endDate?: string;
-  status?: string;
   autoRenew?: boolean;
   isNew?: boolean;
-  subscriptionId?: string;
   subscriptionFilters?: subscriptionFilters[];
-}
-
-export interface ChangeSubscriptionParams {
-  customerId: string;
-  planId?: string;
-  subscriptionFilters?: subscriptionFilters[];
-  replacePlanId?: string;
-  replacePlanInvoicingBehavior?: "add_to_next_invoice" | "invoice_now";
-  turnOffAutoRenew?: boolean;
-  endDate?: string;
 }
 
 export interface SubscriptionDetailsParams {
@@ -99,7 +87,8 @@ export interface PlanDetailsParams {
 
 export interface CustomerMetricAccessParams {
   customerId: string;
-  eventName: string;
+  metricId?: string;
+  eventName?: string;
   subscriptionFilters?: subscriptionFilters[];
 }
 
@@ -107,13 +96,6 @@ export interface CustomerFeatureAccess {
   customerId: string;
   featureName: string;
   subscriptionFilters?: subscriptionFilters[];
-}
-
-export interface CustomerFeatureAccessResponse {
-  feature: string;
-  subscription_id: string;
-  subscription_filters: subscriptionFilters[];
-  access: boolean;
 }
 
 export interface TrackEventEntity {
@@ -128,18 +110,33 @@ export interface TrackEvent {
   batch: TrackEventEntity[];
 }
 
+
 export interface ListAllSubscriptionsParams {
-  customerId?: string;
-  status?: "active" | "ended" | "not_started";
+  customerId: string;
+  planId?: string;
+  rangeEnd?: string;
+  rangeStart?: string;
+  status?: string[];
 }
 
 export interface CancelSubscriptionParams {
   planId: string;
-  billUsage?: boolean;
   customerId: string;
-  invoicingBehaviorOnCancel?: "add_to_next_invoice" | "invoice_now";
-  flatFeeBehavior?: "refund" | "prorate" | "charge_full";
   subscriptionFilters?: subscriptionFilters[];
+  invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
+  flatFeeBehavior?: "refund" | "prorate" | "charge_full";
+  usageBehaviour?: "bill_full" | "bill_none";
+}
+
+export interface ChangeSubscriptionParams {
+  customerId: string;
+  planId?: string;
+  subscriptionFilters?: subscriptionFilters[];
+  replacePlanId?: string;
+  invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
+  usageBehaviour?: "bill_full" | "bill_none";
+  turnOffAutoRenew?: boolean;
+  endDate?: string;
 }
 
 export interface GetInvoicesParams {

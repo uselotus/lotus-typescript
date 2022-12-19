@@ -365,17 +365,11 @@ class Lotus {
     if (params.endDate) {
       data["end_date"] = params.endDate;
     }
-    if (params.status) {
-      data["status"] = params.status;
-    }
     if (params.autoRenew) {
       data["auto_renew"] = params.autoRenew;
     }
     if (params.isNew) {
       data["is_new"] = params.isNew;
-    }
-    if (params.subscriptionId) {
-      data["subscription_id"] = params.subscriptionId;
     }
 
     if (params.subscriptionFilters?.length) {
@@ -405,8 +399,6 @@ class Lotus {
   async cancelSubscription(params: CancelSubscriptionParams) {
     eventValidation(params, ValidateEventType.cancelSubscription);
     const data = {
-      bill_usage: params.billUsage,
-      flat_fee_behavior: params.flatFeeBehavior,
       plan_id: params.planId,
       customer_id: params.customerId,
     };
@@ -421,10 +413,16 @@ class Lotus {
         })
       );
     }
+
+    const body = {
+      flat_fee_behavior:params.flatFeeBehavior,
+      usage_behavior:params.usageBehaviour,
+      invoicing_behavior:params.invoicingBehavior,
+    }
     const req = this.getRequestObject(
       REQUEST_TYPES.DELETE,
       REQUEST_URLS.CANCEL_SUBSCRIPTION,
-      null,
+      body,
       data
     );
 
@@ -458,18 +456,18 @@ class Lotus {
       );
     }
 
-    const newbody = {
+    const body = {
       replace_plan_id: params.replacePlanId || null,
+      invoicing_behavior: params.invoicingBehavior || null,
+      usage_behavior: params.usageBehaviour || null,
       turn_off_auto_renew: params.turnOffAutoRenew || null,
-      replace_plan_invoicing_behavior:
-        params.replacePlanInvoicingBehavior || null,
       end_date: params.endDate || null,
     };
 
     const req = this.getRequestObject(
       REQUEST_TYPES.PATCH,
       REQUEST_URLS.CHANGE_SUBSCRIPTION,
-      newbody,
+      body,
       data
     );
 
@@ -484,11 +482,15 @@ class Lotus {
   async listSubscriptions(
     params: ListAllSubscriptionsParams
   ): Promise<AxiosResponse<Subscription[]>> {
+    eventValidation(params, ValidateEventType.listSubscriptions);
     let data;
     if (!!Object.keys(params).length) {
       data = {
-        customer_id: params.customerId || null,
-        status: params.status || null,
+        customer_id: params.customerId,
+        status: params.status || [],
+        range_start: params.rangeStart || null,
+        range_end: params.rangeEnd || null,
+        plan_id: params.planId || null,
       };
     }
 
@@ -591,7 +593,8 @@ class Lotus {
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
-      event_name: params.eventName,
+      event_name: params.eventName || null,
+      metric_id: params.metricId || null,
     };
 
     if (params.subscriptionFilters?.length) {

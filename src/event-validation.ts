@@ -9,7 +9,7 @@ import {
   CreateBatchCustomerParams,
   CustomerFeatureAccess,
   CustomerMetricAccessParams,
-  CancelSubscriptionParams, PlanDetailsParams,
+  CancelSubscriptionParams, PlanDetailsParams, ListAllSubscriptionsParams,
 } from "./data-types";
 
 /**
@@ -40,6 +40,8 @@ export function eventValidation(event, type) {
       return validateCreateCustomersBatchEvent(event);
     case ValidateEventType.cancelSubscription:
       return validateDeleteSubscriptionEvent(event);
+    case ValidateEventType.listSubscriptions:
+      return validateListSubscriptionEvent(event);
     default:
       throw new Error("Invalid Event Type");
   }
@@ -186,10 +188,6 @@ function validateCustomerMetricAccessEvent(event: CustomerMetricAccessParams) {
     throw new Error("customerId is a required key");
   }
 
-  if (!event.eventName) {
-     throw new Error("customerId is a required key");
-  }
-
   if (event.subscriptionFilters && !Array.isArray(event.subscriptionFilters)) {
     throw new Error("subscriptionFilters must be an array");
   }
@@ -241,5 +239,32 @@ function validateDeleteSubscriptionEvent(event: CancelSubscriptionParams) {
 function validatePlanDetailsEvent(event: PlanDetailsParams) {
   if (!event.planId) {
     throw new Error("planId is a required key");
+  }
+}
+
+/**
+ * Validate a "ListSubscription" event.
+ */
+
+function validateListSubscriptionEvent(event: ListAllSubscriptionsParams) {
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
+
+  const allowed_status = ["active", "not_started", "ended"];
+
+  if (event.status && !Array.isArray(event.status)) {
+    throw new Error("subscriptionFilters must be an array");
+  }
+
+  if (event.status?.length) {
+    event.status.forEach(status => {
+      if (!allowed_status.includes(status)) {
+        throw new Error(
+            `status Must be one the these "active","prorate", "charge_full"`
+        )
+      }
+
+    })
   }
 }
