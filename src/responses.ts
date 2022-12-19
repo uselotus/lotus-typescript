@@ -99,7 +99,6 @@ export interface Subscription {
     ]
 }
 
-
 export interface CustomerDetails {
     customer_id: string,
     email: string,
