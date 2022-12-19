@@ -4,11 +4,14 @@
 name: Node.js Package
 
 on:
-  release:
-    types: [created]
+  pull_request:
+    types: [closed]
+    branches:
+      - main
 
 jobs:
   build:
+    fail-fast: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
