@@ -22,18 +22,12 @@ import {
   GetInvoicesParams,
   PlanDetailsParams,
 } from "./data-types";
-import {
-  ChangeSubscription,
-  CreateCustomer,
-  CreateCustomersBatch,
-  CreateSubscription,
-  Customer,
-  CustomerDetails,
-  CustomerMetricAccess,
-  Invoices,
-  Subscription,
-} from "./responses";
-import * as url from "url";
+import {ListCustomerResponse} from "./responses/ListCustomerResponse";
+import {BatchCustomers} from "./responses/BatchCustomers";
+import {CreateSubscription} from "./responses/CreateSubscription";
+import {ListPlan} from "./responses/ListPlans";
+import {CustomerFeatureAccessResponse, CustomerMetricAccessResponse} from "./responses/CustomerFeatureAccess";
+import {InvoiceResponse} from "./responses/listInvoices";
 
 const noop = () => {};
 
@@ -257,7 +251,7 @@ class Lotus {
    *
    * @return {Object} (Array of customers)
    */
-  async listCustomers(): Promise<AxiosResponse<Customer[]>> {
+  async listCustomers(): Promise<AxiosResponse<ListCustomerResponse[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMERS
@@ -274,7 +268,7 @@ class Lotus {
    */
   async getCustomer(
     message: CustomerDetailsParams
-  ): Promise<AxiosResponse<CustomerDetails>> {
+  ): Promise<AxiosResponse<ListCustomerResponse>> {
     eventValidation(message, ValidateEventType.customerDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -292,7 +286,7 @@ class Lotus {
    */
   async createCustomer(
     params: CreateCustomerParams
-  ): Promise<AxiosResponse<CreateCustomer>> {
+  ): Promise<AxiosResponse<ListCustomerResponse>> {
     eventValidation(params, ValidateEventType.createCustomer);
     const data = {
       customer_id: params.customerId,
@@ -319,7 +313,7 @@ class Lotus {
    */
   async createBatchCustomer(
     params: CreateBatchCustomerParams
-  ): Promise<AxiosResponse<CreateCustomersBatch>> {
+  ): Promise<AxiosResponse<BatchCustomers>> {
     eventValidation(params, ValidateEventType.createCustomersBatch);
 
     const customers = params.customers.map((customer) => {
@@ -438,7 +432,7 @@ class Lotus {
    */
   async updateSubscription(
     params: ChangeSubscriptionParams
-  ): Promise<AxiosResponse<ChangeSubscription>> {
+  ): Promise<AxiosResponse<CreateSubscription>> {
     eventValidation(params, ValidateEventType.changeSubscription);
     const data = {
       plan_id: params.planId || null,
@@ -481,7 +475,7 @@ class Lotus {
    */
   async listSubscriptions(
     params: ListAllSubscriptionsParams
-  ): Promise<AxiosResponse<Subscription[]>> {
+  ): Promise<AxiosResponse<CreateSubscription[]>> {
     eventValidation(params, ValidateEventType.listSubscriptions);
     let data;
     if (!!Object.keys(params).length) {
@@ -524,7 +518,7 @@ class Lotus {
    * Get All plans.
    *
    */
-  async listPlans() {
+  async listPlans() : Promise<AxiosResponse<ListPlan[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_ALL_PLANS
@@ -539,7 +533,7 @@ class Lotus {
    * @param params
    *
    */
-  async getPlan(params: PlanDetailsParams) {
+  async getPlan(params: PlanDetailsParams) : Promise<AxiosResponse<ListPlan>> {
     eventValidation(params, ValidateEventType.planDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -557,7 +551,7 @@ class Lotus {
    */
   async getCustomerFeatureAccess(
     params: CustomerFeatureAccess
-  ): Promise<AxiosResponse<CustomerFeatureAccess[]>> {
+  ): Promise<AxiosResponse<CustomerFeatureAccessResponse[]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
@@ -589,7 +583,7 @@ class Lotus {
    */
   async getCustomerMetricAccess(
     params: CustomerMetricAccessParams
-  ): Promise<AxiosResponse<CustomerMetricAccess[]>> {
+  ): Promise<AxiosResponse<CustomerMetricAccessResponse[]>> {
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
@@ -623,7 +617,7 @@ class Lotus {
    */
   async listInvoices(
     params: GetInvoicesParams
-  ): Promise<AxiosResponse<Invoices[]>> {
+  ): Promise<AxiosResponse<InvoiceResponse[]>> {
     const data = {
       customer_id: params.customerId || null,
       payment_status: params.paymentStatus || null,
