@@ -46,13 +46,6 @@ const callReq = async (req) => {
   }
 };
 
-async function getFirstAlbumTitle() {
-  const response = await axios.get(
-    "https://jsonplaceholder.typicode.com/albums"
-  );
-  return response.data[0].title;
-}
-
 class Lotus {
   private readonly host: any;
   private readonly apiKey: any;
@@ -100,7 +93,7 @@ class Lotus {
       method: method,
       url: this.getRequestUrl(url),
       params: params,
-      body: data,
+      data: data,
       headers: this.headers,
     };
   };
@@ -400,27 +393,14 @@ class Lotus {
     };
 
     if (params.subscriptionFilters?.length) {
-      // data["subscription_filters"] = JSON.stringify(
-      //   params.subscriptionFilters?.map((v) => {
-      //     return {
-      //       property_name: v.propertyName,
-      //       value: v.value,
-      //     };
-      //   })
-      // );
-      console.log(
-        params.subscriptionFilters?.map((v) => {
-          return {
+      data["subscription_filters"] = [];
+      params.subscriptionFilters.forEach((v) => {
+        data["subscription_filters"].push(
+          JSON.stringify({
             property_name: v.propertyName,
             value: v.value,
-          };
-        })
-      );
-      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
-        return {
-          property_name: v.propertyName,
-          value: v.value,
-        };
+          })
+        );
       });
     }
 
@@ -456,11 +436,14 @@ class Lotus {
     };
 
     if (params.subscriptionFilters?.length) {
-      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
-        return {
-          property_name: v.propertyName,
-          value: v.value,
-        };
+      data["subscription_filters"] = [];
+      params.subscriptionFilters.forEach((v) => {
+        data["subscription_filters"].push(
+          JSON.stringify({
+            property_name: v.propertyName,
+            value: v.value,
+          })
+        );
       });
     }
 

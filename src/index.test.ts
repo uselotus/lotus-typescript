@@ -132,12 +132,27 @@ function getEmail(length) {
 // });
 
 describe("Testing Subscriptions Endpoints", () => {
-  it("Test Get All Subscriptions", async () => {
-    const result = await lotus.listSubscriptions({ customerId: "Bvxmv" });
-    expect(result.status).toEqual(200);
-    const subscriptions = result.data?.length ? result.data[0] : null;
-    console.log(subscriptions);
-  });
+  //   it("Test Get All Subscriptions", async () => {
+  //     const result = await lotus.listSubscriptions({ customerId: "Bvxmv" });
+  //     expect(result.status).toEqual(200);
+  //     const subscriptions = result.data?.length ? result.data[0] : null;
+  //     console.log(subscriptions);
+  //   });
+  //   it("Test Create/Add Subscription", async () => {
+  //     const result = await lotus.createSubscription({
+  //       customerId: "Bvxmv",
+  //       planId: "plan_d09c559a014b438dad32f2c7a6fc5ae3",
+  //       startDate: "2022-12-12",
+  //       subscriptionFilters: [
+  //         {
+  //           value: "4",
+  //           propertyName: "test",
+  //         },
+  //       ],
+  //     });
+  //     expect(result.status).toEqual(201);
+  //     const subscription = result.data ? result.data : null;
+  //   });
   //   it("Test Create/Add Subscription", async () => {
   //     const result = await lotus.createSubscription({
   //       customerId: "Bvxmv",
@@ -174,7 +189,7 @@ describe("Testing Subscriptions Endpoints", () => {
       turnOffAutoRenew: true,
       subscriptionFilters: [
         {
-          value: "3",
+          value: "4",
           propertyName: "test",
         },
       ],
