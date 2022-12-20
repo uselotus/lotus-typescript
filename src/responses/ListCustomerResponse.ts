@@ -1,49 +1,50 @@
+import { CreateSubscription } from "./CreateSubscription";
 interface Currency {
-    code: string;
-    name: string;
-    symbol: string;
+  code: string;
+  name: string;
+  symbol: string;
 }
 
 interface Invoice {
-    external_payment_obj_type: string;
-    invoice_number: string;
-    currency: Currency;
-    external_payment_obj_id: string;
-    due_date: Date;
-    payment_status: string;
-    issue_date: Date;
-    cost_due: number;
+  external_payment_obj_type: string;
+  invoice_number: string;
+  currency: Currency;
+  external_payment_obj_id: string;
+  due_date: Date;
+  payment_status: string;
+  issue_date: Date;
+  cost_due: number;
 }
 
-interface SubscriptionFilter {
-    value: string;
-    property_name: string;
-}
+// interface SubscriptionFilter {
+//   value: string;
+//   property_name: string;
+// }
 
-interface Subscription {
-    customer_id: string;
-    plan_id: string;
-    subscription_filters: SubscriptionFilter[];
-}
+// interface Subscription {
+//   customer_id: string;
+//   plan_id: string;
+//   subscription_filters: SubscriptionFilter[];
+// }
 
 interface Integrations {
-    property1?: any;
-    property2?: any;
+  property1?: any;
+  property2?: any;
 }
 
 interface DefaultCurrency {
-    code: string;
-    name: string;
-    symbol: string;
+  code: string;
+  name: string;
+  symbol: string;
 }
 
 export interface ListCustomerResponse {
-    customer_id: string;
-    email: string;
-    customer_name: string;
-    invoices: Invoice[];
-    total_amount_due: number;
-    subscriptions: Subscription[];
-    integrations: Integrations;
-    default_currency: DefaultCurrency;
+  customer_id: string;
+  email: string;
+  customer_name: string;
+  invoices: Invoice[];
+  total_amount_due: number;
+  subscriptions: CreateSubscription[];
+  integrations: Integrations;
+  default_currency: DefaultCurrency;
 }
