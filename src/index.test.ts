@@ -41,7 +41,6 @@ describe("Testing Customers Endpoints", () => {
         const result = await lotus.listCustomers();
         expect(result.status).toEqual(200);
         const customer = result.data?.length ? result.data[0] : null;
-        console.log(customer)
         if (customer) {
             const hasAllKeys = expectedCustomerKeys.every((item) => customer.hasOwnProperty(item));
             expect(hasAllKeys).toEqual(true);
@@ -246,22 +245,33 @@ describe("Testing Subscriptions Endpoints", () => {
         }
     });
 
-    // it("Test Create/Add Subscription", async () => {
-    //     const result = await lotus.createSubscription({
-    //         customerId: customer_id,
-    //         planId: plan_id,
-    //         startDate: "2022-12-12",
-    //         subscriptionFilters: [
-    //             {
-    //                 value: "4",
-    //                 propertyName: "test",
-    //             },
-    //         ],
-    //     });
-    //     expect(result.status).toEqual(201);
-    //     const subscription = result.data ? result.data : null;
-    //     console.log(subscription)
-    // });
+    it("Test Create/Add Subscription", async () => {
+        const result = await lotus.createSubscription({
+            customerId: customer_id,
+            planId: plan_id,
+            startDate: "2022-12-12",
+            subscriptionFilters: [
+                {
+                    value: "5",
+                    propertyName: "test1",
+                },
+            ],
+        });
+        expect(result.status).toEqual(201);
+        const subscription = result.data ? result.data : null;
+        if(subscription) {
+            const keys = ['start_date',
+                'end_date',
+                'auto_renew',
+                'is_new',
+                'customer',
+                'billing_plan'
+            ];
+            const hasAllKeys = keys.every((item) => subscription.hasOwnProperty(item));
+            expect(hasAllKeys).toEqual(true);
+
+        }
+    });
 
     it("Test Cancel Subscription", async () => {
         const result = await lotus.cancelSubscription({
@@ -275,17 +285,29 @@ describe("Testing Subscriptions Endpoints", () => {
             ],
         });
         expect(result.status).toEqual(200);
-        const subscription = result.data ? result.data : null;
     });
 
-    // it("Test Update Subscription", async () => {
-    //     const result = await lotus.updateSubscription({
-    //         customerId: customer_id,
-    //         planId: plan_id,
-    //         turnOffAutoRenew: true,
-    //     });
-    //     expect(result.status).toEqual(200);
-    //     const subscription = result.data ? result.data : null;
-    //     console.log(subscription)
-    // });
+    it("Test Update Subscription", async () => {
+        const result = await lotus.updateSubscription({
+            customerId: customer_id,
+            planId: plan_id,
+            turnOffAutoRenew: true,
+        });
+        expect(result.status).toEqual(200);
+        const subscription = result.data ? result.data[0] : null;
+         if(subscription) {
+             console.log(subscription)
+            const keys = [
+                'start_date',
+                'end_date',
+                'auto_renew',
+                'is_new',
+                'customer',
+                'billing_plan'
+            ];
+            const hasAllKeys = keys.every((item) => subscription.hasOwnProperty(item));
+            expect(hasAllKeys).toEqual(true);
+
+        }
+    });
 });
