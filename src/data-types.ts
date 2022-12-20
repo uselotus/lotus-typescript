@@ -14,7 +14,8 @@ export const REQUEST_URLS = {
   CANCEL_SUBSCRIPTION: `/api/subscriptions/cancel/`,
   CHANGE_SUBSCRIPTION: `/api/subscriptions/update/`,
   GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
-  GET_SUBSCRIPTION_DETAILS: (subscriptionId) => `/api/subscriptions/${subscriptionId}/`,
+  GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
+    `/api/subscriptions/${subscriptionId}/`,
   GET_ALL_PLANS: "/api/plans/",
   GET_PLAN_DETAILS: (planId) => `/api/plans/${planId}/`,
   GET_CUSTOMER_FEATURE_ACCESS: "/api/customer_feature_access/",
@@ -110,7 +111,6 @@ export interface TrackEvent {
   batch: TrackEventEntity[];
 }
 
-
 export interface ListAllSubscriptionsParams {
   customerId: string;
   planId?: string;
@@ -125,7 +125,7 @@ export interface CancelSubscriptionParams {
   subscriptionFilters?: subscriptionFilters[];
   invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
   flatFeeBehavior?: "refund" | "prorate" | "charge_full";
-  usageBehaviour?: "bill_full" | "bill_none";
+  usageBehavior?: "bill_full" | "bill_none";
 }
 
 export interface ChangeSubscriptionParams {
@@ -134,7 +134,7 @@ export interface ChangeSubscriptionParams {
   subscriptionFilters?: subscriptionFilters[];
   replacePlanId?: string;
   invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
-  usageBehaviour?: "bill_full" | "bill_none";
+  usageBehavior?: "transfer_to_new_subscription" | "keep_separate";
   turnOffAutoRenew?: boolean;
   endDate?: string;
 }

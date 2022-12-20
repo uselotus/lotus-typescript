@@ -3,7 +3,6 @@ import axios, { AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import ms from "ms";
 import { eventValidation } from "./event-validation";
-import { stringify } from "qs";
 import {
   ValidateEventType,
   CreateCustomerParams,
@@ -22,12 +21,15 @@ import {
   GetInvoicesParams,
   PlanDetailsParams,
 } from "./data-types";
-import {ListCustomerResponse} from "./responses/ListCustomerResponse";
-import {BatchCustomers} from "./responses/BatchCustomers";
-import {CreateSubscription} from "./responses/CreateSubscription";
-import {ListPlan} from "./responses/ListPlans";
-import {CustomerFeatureAccessResponse, CustomerMetricAccessResponse} from "./responses/CustomerFeatureAccess";
-import {InvoiceResponse} from "./responses/listInvoices";
+import { ListCustomerResponse } from "./responses/ListCustomerResponse";
+import { BatchCustomers } from "./responses/BatchCustomers";
+import { CreateSubscription } from "./responses/CreateSubscription";
+import { ListPlan } from "./responses/ListPlans";
+import {
+  CustomerFeatureAccessResponse,
+  CustomerMetricAccessResponse,
+} from "./responses/CustomerFeatureAccess";
+import { InvoiceResponse } from "./responses/listInvoices";
 
 const noop = () => {};
 
@@ -39,7 +41,7 @@ const callReq = async (req) => {
   try {
     return await axios(req);
   } catch (error) {
-    console.log(error);
+    // console.log(error.response.data);
     throw new Error(error);
   }
 };
@@ -398,7 +400,15 @@ class Lotus {
     };
 
     if (params.subscriptionFilters?.length) {
-      data["subscription_filters"] = stringify(
+      // data["subscription_filters"] = JSON.stringify(
+      //   params.subscriptionFilters?.map((v) => {
+      //     return {
+      //       property_name: v.propertyName,
+      //       value: v.value,
+      //     };
+      //   })
+      // );
+      console.log(
         params.subscriptionFilters?.map((v) => {
           return {
             property_name: v.propertyName,
@@ -406,15 +416,21 @@ class Lotus {
           };
         })
       );
+      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
+        return {
+          property_name: v.propertyName,
+          value: v.value,
+        };
+      });
     }
 
     const body = {
-      flat_fee_behavior:params.flatFeeBehavior,
-      usage_behavior:params.usageBehaviour,
-      invoicing_behavior:params.invoicingBehavior,
-    }
+      flat_fee_behavior: params.flatFeeBehavior,
+      usage_behavior: params.usageBehavior,
+      invoicing_behavior: params.invoicingBehavior,
+    };
     const req = this.getRequestObject(
-      REQUEST_TYPES.DELETE,
+      REQUEST_TYPES.POST,
       REQUEST_URLS.CANCEL_SUBSCRIPTION,
       body,
       data
@@ -440,26 +456,24 @@ class Lotus {
     };
 
     if (params.subscriptionFilters?.length) {
-      data["subscription_filters"] = stringify(
-        params.subscriptionFilters?.map((v) => {
-          return {
-            property_name: v.propertyName,
-            value: v.value,
-          };
-        })
-      );
+      data["subscription_filters"] = params.subscriptionFilters?.map((v) => {
+        return {
+          property_name: v.propertyName,
+          value: v.value,
+        };
+      });
     }
 
     const body = {
       replace_plan_id: params.replacePlanId || null,
       invoicing_behavior: params.invoicingBehavior || null,
-      usage_behavior: params.usageBehaviour || null,
+      usage_behavior: params.usageBehavior || null,
       turn_off_auto_renew: params.turnOffAutoRenew || null,
       end_date: params.endDate || null,
     };
 
     const req = this.getRequestObject(
-      REQUEST_TYPES.PATCH,
+      REQUEST_TYPES.POST,
       REQUEST_URLS.CHANGE_SUBSCRIPTION,
       body,
       data
@@ -518,7 +532,7 @@ class Lotus {
    * Get All plans.
    *
    */
-  async listPlans() : Promise<AxiosResponse<ListPlan[]>> {
+  async listPlans(): Promise<AxiosResponse<ListPlan[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_ALL_PLANS
@@ -533,7 +547,7 @@ class Lotus {
    * @param params
    *
    */
-  async getPlan(params: PlanDetailsParams) : Promise<AxiosResponse<ListPlan>> {
+  async getPlan(params: PlanDetailsParams): Promise<AxiosResponse<ListPlan>> {
     eventValidation(params, ValidateEventType.planDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
