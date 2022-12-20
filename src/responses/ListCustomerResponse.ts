@@ -1,11 +1,11 @@
 import { CreateSubscription } from "./CreateSubscription";
-interface Currency {
+export interface Currency {
   code: string;
   name: string;
   symbol: string;
 }
 
-interface Invoice {
+export interface Invoice {
   external_payment_obj_type: string;
   invoice_number: string;
   currency: Currency;
