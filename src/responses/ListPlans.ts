@@ -113,4 +113,3 @@ export interface ListPlan {
   num_versions: number;
   active_subscriptions: number;
 }
-

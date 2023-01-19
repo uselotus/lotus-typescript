@@ -23,5 +23,5 @@ export interface CreateSubscription {
   fully_billed?: boolean;
   is_new?: boolean;
   auto_renew?: boolean;
-  billing_plan?: LightPlan;
+  billing_plan: LightPlan;
 }

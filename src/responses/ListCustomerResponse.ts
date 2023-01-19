@@ -48,6 +48,7 @@ export interface ListCustomerResponse {
   integrations: Integrations;
   default_currency: DefaultCurrency;
   has_payment_method: boolean;
+  payment_provider: string;
   address?: any;
-  tax_rate: number;
+  tax_rate?: number;
 }
