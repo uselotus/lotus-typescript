@@ -6,19 +6,18 @@ export enum REQUEST_TYPES {
 }
 
 export const REQUEST_URLS = {
-  GET_CUSTOMERS: "/app/customers/",
-  CREATE_CUSTOMERS: "/app/customers/",
+  GET_CUSTOMERS: "/api/customers/",
+  CREATE_CUSTOMERS: "/api/customers/",
   CREATE_BATCH_CUSTOMERS: "/api/batch_create_customers/",
-  GET_CUSTOMER_DETAIL: (customerId) => `/app/customers/${customerId}/`,
-  CREATE_SUBSCRIPTION: "/app/subscriptions/",
-  CANCEL_SUBSCRIPTION: `/app/subscriptions/cancel/`,
-  CHANGE_SUBSCRIPTION: `/app/subscriptions/update/`,
-  GET_ALL_SUBSCRIPTIONS: "/app/subscriptions/",
+  GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
+  CREATE_SUBSCRIPTION: "/api/subscriptions/add/",
+  CANCEL_SUBSCRIPTION: `/api/subscriptions/cancel/`,
+  CHANGE_SUBSCRIPTION: `/api/subscriptions/update/`,
+  GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
   GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
-    `/app/subscriptions/${subscriptionId}/`,
+    `/api/subscriptions/${subscriptionId}/`,
   GET_ALL_PLANS: "/api/plans/",
-  GET_PLAN_DETAILS: (planId) =>
-    `/api/plans/${planId}/`,
+  GET_PLAN_DETAILS: (planId) => `/api/plans/${planId}/`,
   GET_CUSTOMER_FEATURE_ACCESS: "/api/customer_feature_access/",
   GET_CUSTOMER_METRIC_ACCESS: "/api/customer_metric_access/",
   TRACK_EVENT: "/api/track/",
@@ -38,6 +37,7 @@ export enum ValidateEventType {
   customerFeatureAccess = "customerFeatureAccess",
   createCustomersBatch = "createCustomersBatch",
   getInvoices = "getInvoices",
+  listSubscriptions = "listSubscriptions",
 }
 
 export interface CreateCustomerParams {
@@ -47,7 +47,6 @@ export interface CreateCustomerParams {
   paymentProviderId?: string;
   customerName?: string;
   properties?: string;
-  integrations?: string;
   default_currency_code?: string;
 }
 
@@ -74,21 +73,9 @@ export interface CreateSubscriptionParams {
   planId: string;
   startDate: string;
   endDate?: string;
-  status?: string;
   autoRenew?: boolean;
   isNew?: boolean;
-  subscriptionId?: string;
   subscriptionFilters?: subscriptionFilters[];
-}
-
-export interface ChangeSubscriptionParams {
-  customerId: string;
-  planId?: string;
-  subscriptionFilters?: subscriptionFilters[];
-  replacePlanId?: string;
-  replacePlanInvoicingBehavior?: "add_to_next_invoice" | "invoice_now";
-  turnOffAutoRenew?: boolean;
-  endDate?: string;
 }
 
 export interface SubscriptionDetailsParams {
@@ -101,7 +88,8 @@ export interface PlanDetailsParams {
 
 export interface CustomerMetricAccessParams {
   customerId: string;
-  eventName: string;
+  metricId?: string;
+  eventName?: string;
   subscriptionFilters?: subscriptionFilters[];
 }
 
@@ -109,13 +97,6 @@ export interface CustomerFeatureAccess {
   customerId: string;
   featureName: string;
   subscriptionFilters?: subscriptionFilters[];
-}
-
-export interface CustomerFeatureAccessResponse {
-  feature: string;
-  subscription_id: string;
-  subscription_filters: subscriptionFilters[];
-  access: boolean;
 }
 
 export interface TrackEventEntity {
@@ -131,17 +112,31 @@ export interface TrackEvent {
 }
 
 export interface ListAllSubscriptionsParams {
-  customerId?: string;
-  status?: "active" | "ended" | "not_started";
+  customerId: string;
+  planId?: string;
+  rangeEnd?: string;
+  rangeStart?: string;
+  status?: string[];
 }
 
 export interface CancelSubscriptionParams {
   planId: string;
-  billUsage?: boolean;
   customerId: string;
-  invoicingBehaviorOnCancel?: "add_to_next_invoice" | "invoice_now";
-  flatFeeBehavior?: "refund" | "prorate" | "charge_full";
   subscriptionFilters?: subscriptionFilters[];
+  invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
+  flatFeeBehavior?: "refund" | "prorate" | "charge_full";
+  usageBehavior?: "bill_full" | "bill_none";
+}
+
+export interface ChangeSubscriptionParams {
+  customerId: string;
+  planId?: string;
+  subscriptionFilters?: subscriptionFilters[];
+  replacePlanId?: string;
+  invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
+  usageBehavior?: "transfer_to_new_subscription" | "keep_separate";
+  turnOffAutoRenew?: boolean;
+  endDate?: string;
 }
 
 export interface GetInvoicesParams {
