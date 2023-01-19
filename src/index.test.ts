@@ -23,7 +23,6 @@ const expectedCustomerKeys = [
   "subscriptions",
   "integrations",
   "default_currency",
-
 ];
 
 function getId(length) {
