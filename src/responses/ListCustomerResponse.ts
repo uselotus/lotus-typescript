@@ -47,4 +47,7 @@ export interface ListCustomerResponse {
   subscriptions: CreateSubscription[];
   integrations: Integrations;
   default_currency: DefaultCurrency;
+  has_payment_method: boolean;
+  address?: any;
+  tax_rate: number;
 }
