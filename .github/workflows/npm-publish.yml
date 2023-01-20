@@ -19,6 +19,11 @@ jobs:
         with:
           node-version: 14
       - run: npm install
+      - name: "Create env file"
+        run: |
+          touch .env
+          echo API_KEY=${{ secrets.API_KEY }} >> .env
+          cat .env
       - run: npm test
 
   build-and-publish:
