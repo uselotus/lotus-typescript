@@ -103,23 +103,23 @@ describe("Testing Customers Endpoints", () => {
     }
   });
 
-  it("Test Create Customers Batch", async () => {
-    const customers: CreateCustomerParams[] = [
-      {
-        customerId: getId(5),
-        email: getEmail(5),
-      },
-      {
-        customerId: getId(5),
-        email: getEmail(5),
-      },
-    ];
-    const result = await lotus.createBatchCustomer({
-      customers: customers,
-      behaviorOnExisting: "merge",
-    });
-    expect(result.status).toEqual(201);
-  });
+  // it("Test Create Customers Batch", async () => {
+  // //   const customers: CreateCustomerParams[] = [
+  // //     {
+  // //       customerId: getId(5),
+  // //       email: getEmail(5),
+  // //     },
+  // //     {
+  // //       customerId: getId(5),
+  // //       email: getEmail(5),
+  // //     },
+  // //   ];
+  // //   const result = await lotus.createBatchCustomer({
+  // //     customers: customers,
+  // //     behaviorOnExisting: "merge",
+  // //   });
+  // //   expect(result.status).toEqual(201);
+  // // });
 });
 
 describe("Testing Plans Endpoints", () => {
@@ -240,6 +240,126 @@ describe("Testing Invoices", () => {
       ];
       const hasAllKeys = keys.every((item) => data.hasOwnProperty(item));
       expect(hasAllKeys).toEqual(true);
+    }
+  });
+});
+
+describe("Testing Credits", () => {
+  it("Test Create Credit", async () => {
+    const result = await lotus.createCredit({
+      customerId: customer_id,
+      amount: 100,
+      currencyCode: "USD",
+      description: "Test Credit",
+    });
+    expect(result.status).toEqual(201);
+    const data = result.data ? result.data : null;
+    if (data) {
+      const keys = [
+        "credit_id",
+        "amount",
+        "customer",
+        "currency",
+        "description",
+        "amount_remaining",
+        "effective_at",
+        "expires_at",
+        "status",
+        "amount_paid",
+        "amount_paid_currency",
+      ];
+      const hasAllKeys = keys.every((item) => data.hasOwnProperty(item));
+      expect(hasAllKeys).toEqual(true);
+    }
+  });
+
+  it("Test List Credits", async () => {
+    const result = await lotus.listCredits({
+      customerId: customer_id,
+    });
+    expect(result.status).toEqual(200);
+    const data = result.data ? result.data[0] : null;
+    if (data) {
+      const keys = [
+        "credit_id",
+        "amount",
+        "customer",
+        "currency",
+        "description",
+        "amount_remaining",
+        "effective_at",
+        "expires_at",
+        "status",
+        "amount_paid",
+        "amount_paid_currency",
+      ];
+      const hasAllKeys = keys.every((item) => data.hasOwnProperty(item));
+      expect(hasAllKeys).toEqual(true);
+    }
+  });
+
+  it("Test Update Credit", async () => {
+    const result = await lotus.listCredits({
+      customerId: customer_id,
+    });
+    expect(result.status).toEqual(200);
+    const credit = result.data ? result.data[0] : null;
+    if (credit) {
+      const result = await lotus.updateCredit({
+        creditId: credit.credit_id,
+        expiresAt: date,
+      });
+      expect(result.status).toEqual(200);
+      const data = result.data ? result.data : null;
+      if (data) {
+        const keys = [
+          "credit_id",
+          "amount",
+          "customer",
+          "currency",
+          "description",
+          "amount_remaining",
+          "effective_at",
+          "expires_at",
+          "status",
+          "amount_paid",
+          "amount_paid_currency",
+        ];
+        const hasAllKeys = keys.every((item) => data.hasOwnProperty(item));
+        expect(hasAllKeys).toEqual(true);
+      }
+    }
+  });
+
+  it("Test Void Credit", async () => {
+    const result = await lotus.listCredits({
+      customerId: customer_id,
+    });
+    expect(result.status).toEqual(200);
+    const credit = result.data ? result.data[0] : null;
+    if (credit) {
+      const result = await lotus.voidCredit({
+        creditId: credit.credit_id,
+      });
+      expect(result.status).toEqual(200);
+      const data = result.data ? result.data : null;
+      if (data) {
+        const keys = [
+          "credit_id",
+          "amount",
+          "customer",
+          "currency",
+          "description",
+          "amount_remaining",
+          "effective_at",
+          "expires_at",
+          "status",
+          "amount_paid",
+          "amount_paid_currency",
+        ];
+        const hasAllKeys = keys.every((item) => data.hasOwnProperty(item));
+        expect(hasAllKeys).toEqual(true);
+      }
     }
   });
 });

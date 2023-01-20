@@ -22,6 +22,10 @@ export const REQUEST_URLS = {
   GET_CUSTOMER_METRIC_ACCESS: "/api/customer_metric_access/",
   TRACK_EVENT: "/api/track/",
   GET_INVOICES: "/api/invoices/",
+  LIST_CREDITS: "/api/credits/",
+  CREATE_CREDIT: "/api/credits/",
+  VOID_CREDIT: (creditId) => `/api/credits/${creditId}/void/`,
+  UPDATE_CREDIT: (creditId) => `/api/credits/${creditId}/update`,
 };
 
 export enum ValidateEventType {
@@ -37,6 +41,10 @@ export enum ValidateEventType {
   customerFeatureAccess = "customerFeatureAccess",
   createCustomersBatch = "createCustomersBatch",
   getInvoices = "getInvoices",
+  listCredits = "listCredits",
+  createCredit = "createCredit",
+  voidCredit = "voidCredit",
+  updateCredit = "updateCredit",
   listSubscriptions = "listSubscriptions",
 }
 
@@ -142,4 +150,36 @@ export interface ChangeSubscriptionParams {
 export interface GetInvoicesParams {
   customerId?: string;
   paymentStatus?: "paid" | "unpaid";
+}
+
+export interface ListCreditsParams {
+  customerId: string;
+  status?: "active" | "inactive";
+  issuedBefore?: Date;
+  issuedAfter?: Date;
+  expiresBefore?: Date;
+  expiresAfter?: Date;
+  effectiveBefore?: Date;
+  effectiveAfter?: Date;
+  currencyCode?: string;
+}
+
+export interface CreateCreditParams {
+  customerId: string;
+  amount: number;
+  currencyCode: string;
+  description?: string;
+  expiresAt?: Date;
+  effectiveAt?: Date;
+  amountPaid?: number;
+  amountPaidCurrencyCode?: string;
+}
+
+export interface VoidCreditParams {
+  creditId: string;
+}
+export interface UpdateCreditParams {
+  description?: string;
+  expiresAt?: Date;
+  creditId: string;
 }

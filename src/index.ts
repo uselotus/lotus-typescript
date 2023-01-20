@@ -20,6 +20,10 @@ import {
   CancelSubscriptionParams,
   GetInvoicesParams,
   PlanDetailsParams,
+  ListCreditsParams,
+  CreateCreditParams,
+  VoidCreditParams,
+  UpdateCreditParams,
 } from "./data-types";
 import { ListCustomerResponse } from "./responses/ListCustomerResponse";
 import { BatchCustomers } from "./responses/BatchCustomers";
@@ -30,6 +34,7 @@ import {
   CustomerMetricAccessResponse,
 } from "./responses/CustomerFeatureAccess";
 import { InvoiceResponse } from "./responses/listInvoices";
+import { CreditResponse } from "./responses/CreditResponse";
 
 const noop = () => {};
 
@@ -606,6 +611,70 @@ class Lotus {
     return callReq(req);
   }
 
+  /** Void Credit
+   * @param req
+   */
+  async voidCredit(
+    req: VoidCreditParams
+  ): Promise<AxiosResponse<CreditResponse>> {
+    eventValidation(req, ValidateEventType.voidCredit);
+
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.VOID_CREDIT(req.creditId)
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
+
+  /**
+   * Update Credit
+   * @param req
+   */
+  async updateCredit(
+    req: UpdateCreditParams
+  ): Promise<AxiosResponse<CreditResponse>> {
+    eventValidation(req, ValidateEventType.updateCredit);
+    const data = {
+      description: req.description || null,
+      expires_at: req.expiresAt || null,
+    };
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.UPDATE_CREDIT(req.creditId),
+      data
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
+
+  /**
+   * Create credit
+   * @param req
+   */
+  async createCredit(
+    req: CreateCreditParams
+  ): Promise<AxiosResponse<CreditResponse>> {
+    eventValidation(req, ValidateEventType.createCredit);
+    const data = {
+      customer_id: req.customerId,
+      currency_code: req.currencyCode,
+      amount: req.amount,
+      description: req.description || null,
+      expires_at: req.expiresAt || null,
+      effective_at: req.effectiveAt || null,
+      amount_paid: req.amountPaid || null,
+      amount_paid_currency_code: req.amountPaidCurrencyCode || null,
+    };
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.CREATE_CREDIT,
+      data
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
+
   /**
    * Get invoices.
    *
@@ -622,7 +691,6 @@ class Lotus {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_INVOICES,
-      null,
       data
     );
     this.setRequestTimeout(req);
@@ -649,17 +717,35 @@ class Lotus {
     return error.response.status === 429;
   }
 
-  // /**
-  //  * List credits
-  //  *
-  //  * @param req
-  //  */
-  // async listCredits(req: ListCreditsParams): Promise<AxiosResponse<ListCreditsResponse>> {
-  //   eventValidation(req, ValidateEventType.listCredits);
-  //   const data = {
-  //     customer_id: req.customerId,
-
-  //   };
+  /**
+   * List credits
+   *
+   * @param req
+   */
+  async listCredits(
+    req: ListCreditsParams
+  ): Promise<AxiosResponse<CreditResponse[]>> {
+    eventValidation(req, ValidateEventType.listCredits);
+    const data = {
+      customer_id: req.customerId,
+      currency_code: req.currencyCode || null,
+      effective_after: req.effectiveAfter || null,
+      effective_before: req.effectiveBefore || null,
+      status: req.status || null,
+      expires_after: req.expiresAfter || null,
+      expires_before: req.expiresBefore || null,
+      issed_after: req.issuedAfter || null,
+      issued_before: req.issuedBefore || null,
+    };
+    const request = this.getRequestObject(
+      REQUEST_TYPES.GET,
+      REQUEST_URLS.LIST_CREDITS,
+      null,
+      data
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
 
   private setRequestTimeout = (req) => {
     if (this.timeout) {

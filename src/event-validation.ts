@@ -9,7 +9,13 @@ import {
   CreateBatchCustomerParams,
   CustomerFeatureAccess,
   CustomerMetricAccessParams,
-  CancelSubscriptionParams, PlanDetailsParams, ListAllSubscriptionsParams,
+  CancelSubscriptionParams,
+  PlanDetailsParams,
+  ListAllSubscriptionsParams,
+  ListCreditsParams,
+  CreateCreditParams,
+  VoidCreditParams,
+  UpdateCreditParams,
 } from "./data-types";
 
 /**
@@ -42,6 +48,14 @@ export function eventValidation(event, type) {
       return validateDeleteSubscriptionEvent(event);
     case ValidateEventType.listSubscriptions:
       return validateListSubscriptionEvent(event);
+    case ValidateEventType.listCredits:
+      return validateListCreditsEvent(event);
+    case ValidateEventType.createCredit:
+      return validateCreateCreditEvent(event);
+    case ValidateEventType.voidCredit:
+      return validateVoidCreditEvent(event);
+    case ValidateEventType.updateCredit:
+      return validateUpdateCreditEvent(event);
     default:
       throw new Error("Invalid Event Type");
   }
@@ -243,6 +257,61 @@ function validatePlanDetailsEvent(event: PlanDetailsParams) {
 }
 
 /**
+ * Validate a "ListCredits" event.
+ *
+ */
+
+function validateListCreditsEvent(event: ListCreditsParams) {
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
+}
+
+/**
+ * Validate a CreateCredit event.
+ */
+function validateCreateCreditEvent(event: CreateCreditParams) {
+  if (!event.customerId) {
+    throw new Error("customerId is a required key");
+  }
+  if (!event.amount) {
+    throw new Error("amount is a required key");
+  }
+  if (!event.currencyCode) {
+    throw new Error("currency_code is a required key");
+  }
+
+  if (event.amount < 0) {
+    throw new Error("amount must be greater than 0");
+  }
+
+  if (event.amountPaid < 0) {
+    throw new Error("amount_paid must be greater than 0");
+  }
+}
+
+/**
+ * Validate a voidCredit event.
+ * @param event
+ */
+
+function validateVoidCreditEvent(event: VoidCreditParams) {
+  if (!event.creditId) {
+    throw new Error("creditId is a required key");
+  }
+}
+
+/**
+ * Validate a updateCredit event.
+ * @param event
+ */
+function validateUpdateCreditEvent(event: UpdateCreditParams) {
+  if (!event.creditId) {
+    throw new Error("creditId is a required key");
+  }
+}
+
+/**
  * Validate a "ListSubscription" event.
  */
 
@@ -258,13 +327,12 @@ function validateListSubscriptionEvent(event: ListAllSubscriptionsParams) {
   }
 
   if (event.status?.length) {
-    event.status.forEach(status => {
+    event.status.forEach((status) => {
       if (!allowed_status.includes(status)) {
         throw new Error(
-            `status Must be one the these "active","prorate", "charge_full"`
-        )
+          `status Must be one the these "active","prorate", "charge_full"`
+        );
       }
-
-    })
+    });
   }
 }
