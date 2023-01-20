@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
-import axios, {AxiosResponse} from "axios";
+import axios, { AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import ms from "ms";
 import { eventValidation } from "./event-validation";
-import { stringify } from "qs";
 import {
   ValidateEventType,
   CreateCustomerParams,
@@ -19,16 +18,23 @@ import {
   CustomerMetricAccessParams,
   ListAllSubscriptionsParams,
   CancelSubscriptionParams,
-  GetInvoicesParams, PlanDetailsParams,
+  GetInvoicesParams,
+  PlanDetailsParams,
+  ListCreditsParams,
+  CreateCreditParams,
+  VoidCreditParams,
+  UpdateCreditParams,
 } from "./data-types";
+import { ListCustomerResponse } from "./responses/ListCustomerResponse";
+import { BatchCustomers } from "./responses/BatchCustomers";
+import { CreateSubscription } from "./responses/CreateSubscription";
+import { ListPlan } from "./responses/ListPlans";
 import {
-  ChangeSubscription,
-  CreateCustomer,
-  CreateCustomersBatch,
-  CreateSubscription,
-  Customer,
-  CustomerDetails, CustomerMetricAccess, Invoices, Subscription
-} from "./responses";
+  CustomerFeatureAccessResponse,
+  CustomerMetricAccessResponse,
+} from "./responses/CustomerFeatureAccess";
+import { InvoiceResponse } from "./responses/listInvoices";
+import { CreditResponse } from "./responses/CreditResponse";
 
 const noop = () => {};
 
@@ -38,9 +44,9 @@ const setImmediate = (functionToExecute, args?: any) => {
 
 const callReq = async (req) => {
   try {
-    const result =  await axios(req);
-    return result.data
+    return await axios(req);
   } catch (error) {
+    // console.log(error.response.data);
     throw new Error(error);
   }
 };
@@ -92,7 +98,7 @@ class Lotus {
       method: method,
       url: this.getRequestUrl(url),
       params: params,
-      body: data,
+      data: data,
       headers: this.headers,
     };
   };
@@ -129,11 +135,11 @@ class Lotus {
     this.headers = {
       "X-API-KEY": this.apiKey,
     };
-    axiosRetry(axios, {
-      retries: options.retryCount || 3,
-      retryCondition: this._isErrorRetryable,
-      retryDelay: axiosRetry.exponentialDelay,
-    });
+    // axiosRetry(axios, {
+    //   retries: options.retryCount || 3,
+    //   retryCondition: this._isErrorRetryable,
+    //   retryDelay: axiosRetry.exponentialDelay,
+    // });
   }
 
   /**
@@ -245,7 +251,7 @@ class Lotus {
    *
    * @return {Object} (Array of customers)
    */
-  async get_customers(): Promise<AxiosResponse<Customer[]>> {
+  async listCustomers(): Promise<AxiosResponse<ListCustomerResponse[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMERS
@@ -260,7 +266,9 @@ class Lotus {
    * @return {Object} (customers Details)
    * @param message
    */
-  async get_customer_details(message: CustomerDetailsParams) : Promise<AxiosResponse<CustomerDetails>> {
+  async getCustomer(
+    message: CustomerDetailsParams
+  ): Promise<AxiosResponse<ListCustomerResponse>> {
     eventValidation(message, ValidateEventType.customerDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -276,7 +284,9 @@ class Lotus {
    * @param params
    *
    */
-  async create_customer(params: CreateCustomerParams): Promise<AxiosResponse<CreateCustomer>> {
+  async createCustomer(
+    params: CreateCustomerParams
+  ): Promise<AxiosResponse<ListCustomerResponse>> {
     eventValidation(params, ValidateEventType.createCustomer);
     const data = {
       customer_id: params.customerId,
@@ -301,7 +311,9 @@ class Lotus {
    * @param params
    *
    */
-  async create_customer_batch(params: CreateBatchCustomerParams): Promise<AxiosResponse<CreateCustomersBatch>> {
+  async createBatchCustomer(
+    params: CreateBatchCustomerParams
+  ): Promise<AxiosResponse<BatchCustomers>> {
     eventValidation(params, ValidateEventType.createCustomersBatch);
 
     const customers = params.customers.map((customer) => {
@@ -335,7 +347,9 @@ class Lotus {
    *  @param params
    *
    */
-  async create_subscription(params: CreateSubscriptionParams) : Promise<AxiosResponse<CreateSubscription>> {
+  async createSubscription(
+    params: CreateSubscriptionParams
+  ): Promise<AxiosResponse<CreateSubscription>> {
     eventValidation(params, ValidateEventType.createSubscription);
     const data = {
       customer_id: params.customerId,
@@ -345,17 +359,11 @@ class Lotus {
     if (params.endDate) {
       data["end_date"] = params.endDate;
     }
-    if (params.status) {
-      data["status"] = params.status;
-    }
     if (params.autoRenew) {
       data["auto_renew"] = params.autoRenew;
     }
     if (params.isNew) {
       data["is_new"] = params.isNew;
-    }
-    if (params.subscriptionId) {
-      data["subscription_id"] = params.subscriptionId;
     }
 
     if (params.subscriptionFilters?.length) {
@@ -382,29 +390,34 @@ class Lotus {
    *  @param params
    *
    */
-  async cancel_subscription(params: CancelSubscriptionParams) {
+  async cancelSubscription(params: CancelSubscriptionParams) {
     eventValidation(params, ValidateEventType.cancelSubscription);
     const data = {
-      bill_usage: params.billUsage,
-      flat_fee_behavior: params.flatFeeBehavior,
       plan_id: params.planId,
       customer_id: params.customerId,
     };
 
     if (params.subscriptionFilters?.length) {
-      data["subscription_filters"] = stringify(
-        params.subscriptionFilters?.map((v) => {
-          return {
+      data["subscription_filters"] = [];
+      params.subscriptionFilters.forEach((v) => {
+        data["subscription_filters"].push(
+          JSON.stringify({
             property_name: v.propertyName,
             value: v.value,
-          };
-        })
-      );
+          })
+        );
+      });
     }
+
+    const body = {
+      flat_fee_behavior: params.flatFeeBehavior,
+      usage_behavior: params.usageBehavior,
+      invoicing_behavior: params.invoicingBehavior,
+    };
     const req = this.getRequestObject(
-      REQUEST_TYPES.DELETE,
+      REQUEST_TYPES.POST,
       REQUEST_URLS.CANCEL_SUBSCRIPTION,
-      null,
+      body,
       data
     );
 
@@ -418,7 +431,9 @@ class Lotus {
    * @param params
    *
    */
-  async change_subscription(params: ChangeSubscriptionParams): Promise<AxiosResponse<ChangeSubscription>> {
+  async updateSubscription(
+    params: ChangeSubscriptionParams
+  ): Promise<AxiosResponse<CreateSubscription>> {
     eventValidation(params, ValidateEventType.changeSubscription);
     const data = {
       plan_id: params.planId || null,
@@ -426,28 +441,29 @@ class Lotus {
     };
 
     if (params.subscriptionFilters?.length) {
-      data["subscription_filters"] = stringify(
-        params.subscriptionFilters?.map((v) => {
-          return {
+      data["subscription_filters"] = [];
+      params.subscriptionFilters.forEach((v) => {
+        data["subscription_filters"].push(
+          JSON.stringify({
             property_name: v.propertyName,
             value: v.value,
-          };
-        })
-      );
+          })
+        );
+      });
     }
 
-    const newbody = {
+    const body = {
       replace_plan_id: params.replacePlanId || null,
+      invoicing_behavior: params.invoicingBehavior || null,
+      usage_behavior: params.usageBehavior || null,
       turn_off_auto_renew: params.turnOffAutoRenew || null,
-      replace_plan_invoicing_behavior:
-        params.replacePlanInvoicingBehavior || null,
       end_date: params.endDate || null,
     };
 
     const req = this.getRequestObject(
-      REQUEST_TYPES.PATCH,
+      REQUEST_TYPES.POST,
       REQUEST_URLS.CHANGE_SUBSCRIPTION,
-      newbody,
+      body,
       data
     );
 
@@ -459,12 +475,18 @@ class Lotus {
    * Get all subscriptions.
    *
    */
-  async get_all_subscriptions(params: ListAllSubscriptionsParams): Promise<AxiosResponse<Subscription[]>> {
+  async listSubscriptions(
+    params: ListAllSubscriptionsParams
+  ): Promise<AxiosResponse<CreateSubscription[]>> {
+    eventValidation(params, ValidateEventType.listSubscriptions);
     let data;
     if (!!Object.keys(params).length) {
       data = {
-        customer_id: params.customerId || null,
-        status: params.status || null,
+        customer_id: params.customerId,
+        status: params.status || [],
+        range_start: params.rangeStart || null,
+        range_end: params.rangeEnd || null,
+        plan_id: params.planId || null,
       };
     }
 
@@ -484,7 +506,7 @@ class Lotus {
    * @param params
    *
    */
-  async get_subscription_details(params: SubscriptionDetailsParams) {
+  async getSubscription(params: SubscriptionDetailsParams) {
     eventValidation(params, ValidateEventType.subscriptionDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -498,7 +520,7 @@ class Lotus {
    * Get All plans.
    *
    */
-  async get_all_plans() {
+  async listPlans(): Promise<AxiosResponse<ListPlan[]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_ALL_PLANS
@@ -507,14 +529,13 @@ class Lotus {
     return callReq(req);
   }
 
-
   /**
    * Get plan details. planId
    *
    * @param params
    *
    */
-  async get_plan_details(params: PlanDetailsParams) {
+  async getPlan(params: PlanDetailsParams): Promise<AxiosResponse<ListPlan>> {
     eventValidation(params, ValidateEventType.planDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
@@ -530,7 +551,9 @@ class Lotus {
    * @param params
    *
    */
-  async get_customer_feature_access(params: CustomerFeatureAccess) : Promise<AxiosResponse<CustomerFeatureAccess[]>> {
+  async getCustomerFeatureAccess(
+    params: CustomerFeatureAccess
+  ): Promise<AxiosResponse<CustomerFeatureAccessResponse[]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
@@ -560,11 +583,14 @@ class Lotus {
    * @param params
    *
    */
-  async get_customer_metric_access(params: CustomerMetricAccessParams) : Promise<AxiosResponse<CustomerMetricAccess[]>>{
+  async getCustomerMetricAccess(
+    params: CustomerMetricAccessParams
+  ): Promise<AxiosResponse<CustomerMetricAccessResponse[]>> {
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
-      event_name: params.eventName,
+      event_name: params.eventName || null,
+      metric_id: params.metricId || null,
     };
 
     if (params.subscriptionFilters?.length) {
@@ -585,13 +611,79 @@ class Lotus {
     return callReq(req);
   }
 
+  /** Void Credit
+   * @param req
+   */
+  async voidCredit(
+    req: VoidCreditParams
+  ): Promise<AxiosResponse<CreditResponse>> {
+    eventValidation(req, ValidateEventType.voidCredit);
+
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.VOID_CREDIT(req.creditId)
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
+
+  /**
+   * Update Credit
+   * @param req
+   */
+  async updateCredit(
+    req: UpdateCreditParams
+  ): Promise<AxiosResponse<CreditResponse>> {
+    eventValidation(req, ValidateEventType.updateCredit);
+    const data = {
+      description: req.description || null,
+      expires_at: req.expiresAt || null,
+    };
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.UPDATE_CREDIT(req.creditId),
+      data
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
+
+  /**
+   * Create credit
+   * @param req
+   */
+  async createCredit(
+    req: CreateCreditParams
+  ): Promise<AxiosResponse<CreditResponse>> {
+    eventValidation(req, ValidateEventType.createCredit);
+    const data = {
+      customer_id: req.customerId,
+      currency_code: req.currencyCode,
+      amount: req.amount,
+      description: req.description || null,
+      expires_at: req.expiresAt || null,
+      effective_at: req.effectiveAt || null,
+      amount_paid: req.amountPaid || null,
+      amount_paid_currency_code: req.amountPaidCurrencyCode || null,
+    };
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.CREATE_CREDIT,
+      data
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
+  }
+
   /**
    * Get invoices.
    *
    * @param params
    *
    */
-  async get_invoices(params: GetInvoicesParams) : Promise<AxiosResponse<Invoices[]>>{
+  async listInvoices(
+    params: GetInvoicesParams
+  ): Promise<AxiosResponse<InvoiceResponse[]>> {
     const data = {
       customer_id: params.customerId || null,
       payment_status: params.paymentStatus || null,
@@ -599,7 +691,6 @@ class Lotus {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_INVOICES,
-      null,
       data
     );
     this.setRequestTimeout(req);
@@ -624,6 +715,36 @@ class Lotus {
 
     // Retry if rate limited.
     return error.response.status === 429;
+  }
+
+  /**
+   * List credits
+   *
+   * @param req
+   */
+  async listCredits(
+    req: ListCreditsParams
+  ): Promise<AxiosResponse<CreditResponse[]>> {
+    eventValidation(req, ValidateEventType.listCredits);
+    const data = {
+      customer_id: req.customerId,
+      currency_code: req.currencyCode || null,
+      effective_after: req.effectiveAfter || null,
+      effective_before: req.effectiveBefore || null,
+      status: req.status || null,
+      expires_after: req.expiresAfter || null,
+      expires_before: req.expiresBefore || null,
+      issed_after: req.issuedAfter || null,
+      issued_before: req.issuedBefore || null,
+    };
+    const request = this.getRequestObject(
+      REQUEST_TYPES.GET,
+      REQUEST_URLS.LIST_CREDITS,
+      null,
+      data
+    );
+    this.setRequestTimeout(request);
+    return callReq(request);
   }
 
   private setRequestTimeout = (req) => {
