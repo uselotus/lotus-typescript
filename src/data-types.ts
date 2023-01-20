@@ -71,8 +71,8 @@ export interface subscriptionFilters {
 export interface CreateSubscriptionParams {
   customerId: string;
   planId: string;
-  startDate: string;
-  endDate?: string;
+  startDate: Date;
+  endDate?: Date;
   autoRenew?: boolean;
   isNew?: boolean;
   subscriptionFilters?: subscriptionFilters[];

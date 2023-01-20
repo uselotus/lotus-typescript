@@ -271,7 +271,7 @@ describe("Testing Subscriptions Endpoints", () => {
     const result = await lotus.createSubscription({
       customerId: customer_id,
       planId: plan_id,
-      startDate: format(date, "yyyy-MM-dd"),
+      startDate: date,
       subscriptionFilters: [
         {
           value: "5",

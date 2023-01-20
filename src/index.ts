@@ -649,6 +649,18 @@ class Lotus {
     return error.response.status === 429;
   }
 
+  // /**
+  //  * List credits
+  //  *
+  //  * @param req
+  //  */
+  // async listCredits(req: ListCreditsParams): Promise<AxiosResponse<ListCreditsResponse>> {
+  //   eventValidation(req, ValidateEventType.listCredits);
+  //   const data = {
+  //     customer_id: req.customerId,
+
+  //   };
+
   private setRequestTimeout = (req) => {
     if (this.timeout) {
       req["timeout"] =
