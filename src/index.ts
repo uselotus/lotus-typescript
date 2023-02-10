@@ -42,9 +42,34 @@ const setImmediate = (functionToExecute, args?: any) => {
   return functionToExecute(args);
 };
 
+async function wrapResponse<T>(response: AxiosResponse<T>): Promise<AxiosResponse<T>> {
+  const data = response.data;
+  const camelData = convertKeysToCamelCase(data);
+  return { ...response, data: camelData };
+}
+
+function convertKeysToCamelCase<T>(data: T): T {
+  if (Array.isArray(data)) {
+    return data.map(item => convertKeysToCamelCase(item)) as T;
+  }
+
+  if (typeof data === 'object' && data !== null) {
+    const newData = {};
+    for (const key of Object.keys(data)) {
+      const camelKey = key.replace(/_([a-z])/g, (match, p1) => p1.toUpperCase());
+      newData[camelKey] = convertKeysToCamelCase(data[key]);
+    }
+    return newData as T;
+  }
+
+  return data;
+}
+
+
 const callReq = async (req) => {
   try {
-    return await axios(req);
+    const response = await axios(req);
+    return wrapResponse(response);
   } catch (error) {
     // console.log(error.response.data);
     throw new Error(error);
