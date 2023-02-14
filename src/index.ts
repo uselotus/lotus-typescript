@@ -3,38 +3,20 @@ import axios, { AxiosResponse } from "axios";
 import axiosRetry from "axios-retry";
 import ms from "ms";
 import { eventValidation } from "./event-validation";
+import { components, operations } from "./types-camel";
+import { components as componentsCamel } from "./types";
 import {
   ValidateEventType,
-  CreateCustomerParams,
-  CreateBatchCustomerParams,
   REQUEST_TYPES,
-  CreateSubscriptionParams,
   ChangeSubscriptionParams,
   SubscriptionDetailsParams,
   CustomerDetailsParams,
   REQUEST_URLS,
   TrackEvent,
-  CustomerFeatureAccess,
-  CustomerMetricAccessParams,
-  ListAllSubscriptionsParams,
-  CancelSubscriptionParams,
-  GetInvoicesParams,
-  PlanDetailsParams,
-  ListCreditsParams,
-  CreateCreditParams,
-  VoidCreditParams,
-  UpdateCreditParams,
 } from "./data-types";
 import { ListCustomerResponse } from "./responses/ListCustomerResponse";
 import { BatchCustomers } from "./responses/BatchCustomers";
 import { CreateSubscription } from "./responses/CreateSubscription";
-import { ListPlan } from "./responses/ListPlans";
-import {
-  CustomerFeatureAccessResponse,
-  CustomerMetricAccessResponse,
-} from "./responses/CustomerFeatureAccess";
-import { InvoiceResponse } from "./responses/listInvoices";
-import { CreditResponse } from "./responses/CreditResponse";
 
 const noop = () => {};
 
@@ -42,7 +24,9 @@ const setImmediate = (functionToExecute, args?: any) => {
   return functionToExecute(args);
 };
 
-async function wrapResponse<T>(response: AxiosResponse<T>): Promise<AxiosResponse<T>> {
+async function wrapResponse<T>(
+  response: AxiosResponse<T>
+): Promise<AxiosResponse<T>> {
   const data = response.data;
   const camelData = convertKeysToCamelCase(data);
   return { ...response, data: camelData };
@@ -50,13 +34,15 @@ async function wrapResponse<T>(response: AxiosResponse<T>): Promise<AxiosRespons
 
 function convertKeysToCamelCase<T>(data: T): T {
   if (Array.isArray(data)) {
-    return data.map(item => convertKeysToCamelCase(item)) as T;
+    return data.map((item) => convertKeysToCamelCase(item)) as T;
   }
 
-  if (typeof data === 'object' && data !== null) {
+  if (typeof data === "object" && data !== null) {
     const newData = {};
     for (const key of Object.keys(data)) {
-      const camelKey = key.replace(/_([a-z])/g, (match, p1) => p1.toUpperCase());
+      const camelKey = key.replace(/_([a-z])/g, (match, p1) =>
+        p1.toUpperCase()
+      );
       newData[camelKey] = convertKeysToCamelCase(data[key]);
     }
     return newData as T;
@@ -65,16 +51,15 @@ function convertKeysToCamelCase<T>(data: T): T {
   return data;
 }
 
-
-const callReq = async (req) => {
+async function callReq<T>(req) {
   try {
     const response = await axios(req);
-    return wrapResponse(response);
+    return wrapResponse<T>(response);
   } catch (error) {
     // console.log(error.response.data);
     throw new Error(error);
   }
-};
+}
 
 class Lotus {
   private readonly host: any;
@@ -87,12 +72,12 @@ class Lotus {
   private readonly enable: boolean;
   private timer: number;
 
-  private getRequestObject = (
+  private getRequestObject<T = any | undefined>(
     method: REQUEST_TYPES,
     url: string,
-    data?: any,
+    data?: T,
     params?: any
-  ) => {
+  ) {
     if (data) {
       Object.keys(data).forEach((k) => data[k] == null && delete data[k]);
     }
@@ -126,7 +111,7 @@ class Lotus {
       data: data,
       headers: this.headers,
     };
-  };
+  }
 
   private getRequestUrl = (url: string): string => `${this.host}${url}`;
 
@@ -276,13 +261,16 @@ class Lotus {
    *
    * @return {Object} (Array of customers)
    */
-  async listCustomers(): Promise<AxiosResponse<ListCustomerResponse[]>> {
+  async listCustomers(): Promise<
+    AxiosResponse<components["schemas"]["Customer"][]>
+  > {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_CUSTOMERS
     );
+
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["Customer"][]>(req);
   }
 
   /**
@@ -310,10 +298,10 @@ class Lotus {
    *
    */
   async createCustomer(
-    params: CreateCustomerParams
-  ): Promise<AxiosResponse<ListCustomerResponse>> {
+    params: components["schemas"]["CustomerCreateRequest"]
+  ): Promise<AxiosResponse<components["schemas"]["Customer"]>> {
     eventValidation(params, ValidateEventType.createCustomer);
-    const data = {
+    const data: componentsCamel["schemas"]["CustomerCreateRequest"] = {
       customer_id: params.customerId,
       customer_name: params.customerName,
       email: params.email,
@@ -327,7 +315,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["Customer"]>(req);
   }
 
   /**
@@ -336,9 +324,10 @@ class Lotus {
    * @param params
    *
    */
-  async createBatchCustomer(
-    params: CreateBatchCustomerParams
-  ): Promise<AxiosResponse<BatchCustomers>> {
+  async createBatchCustomer(params: {
+    customers: components["schemas"]["CustomerCreateRequest"][];
+    behaviorOnExisting: boolean;
+  }): Promise<AxiosResponse<BatchCustomers>> {
     eventValidation(params, ValidateEventType.createCustomersBatch);
 
     const customers = params.customers.map((customer) => {
@@ -363,7 +352,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<BatchCustomers>(req);
   }
 
   /**
@@ -373,8 +362,8 @@ class Lotus {
    *
    */
   async createSubscription(
-    params: CreateSubscriptionParams
-  ): Promise<AxiosResponse<CreateSubscription>> {
+    params: components["schemas"]["SubscriptionRecordCreateRequest"]
+  ): Promise<AxiosResponse<components["schemas"]["SubscriptionRecord"]>> {
     eventValidation(params, ValidateEventType.createSubscription);
     const data = {
       customer_id: params.customerId,
@@ -406,7 +395,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["SubscriptionRecord"]>(req);
   }
 
   /**
@@ -415,7 +404,10 @@ class Lotus {
    *  @param params
    *
    */
-  async cancelSubscription(params: CancelSubscriptionParams) {
+  async cancelSubscription(
+    params: operations["apiSubscriptionsCancelCreate"]["parameters"]["query"] &
+      components["schemas"]["SubscriptionRecordCancelRequest"]
+  ) {
     eventValidation(params, ValidateEventType.cancelSubscription);
     const data = {
       plan_id: params.planId,
@@ -434,11 +426,18 @@ class Lotus {
       });
     }
 
-    const body = {
-      flat_fee_behavior: params.flatFeeBehavior,
-      usage_behavior: params.usageBehavior,
-      invoicing_behavior: params.invoicingBehavior,
-    };
+    const body: componentsCamel["schemas"]["SubscriptionRecordCancelRequest"] =
+      {
+        flat_fee_behavior: params.flatFeeBehavior as
+          | "refund"
+          | "charge_prorated"
+          | ""
+          | "charge_full",
+        usage_behavior: params.usageBehavior as "bill_full" | "bill_none",
+        invoicing_behavior: params.invoicingBehavior as
+          | "add_to_next_invoice"
+          | "invoice_now",
+      };
     const req = this.getRequestObject(
       REQUEST_TYPES.POST,
       REQUEST_URLS.CANCEL_SUBSCRIPTION,
@@ -447,7 +446,7 @@ class Lotus {
     );
 
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["SubscriptionRecord"]>(req);
   }
 
   /**
@@ -501,8 +500,8 @@ class Lotus {
    *
    */
   async listSubscriptions(
-    params: ListAllSubscriptionsParams
-  ): Promise<AxiosResponse<CreateSubscription[]>> {
+    params: operations["apiSubscriptionsList"]["parameters"]["query"]
+  ): Promise<AxiosResponse<components["schemas"]["SubscriptionRecord"][]>> {
     eventValidation(params, ValidateEventType.listSubscriptions);
     let data;
     if (!!Object.keys(params).length) {
@@ -522,7 +521,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["SubscriptionRecord"][]>(req);
   }
 
   /**
@@ -545,13 +544,13 @@ class Lotus {
    * Get All plans.
    *
    */
-  async listPlans(): Promise<AxiosResponse<ListPlan[]>> {
+  async listPlans(): Promise<AxiosResponse<components["schemas"]["Plan"][]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_ALL_PLANS
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["Plan"][]>(req);
   }
 
   /**
@@ -560,14 +559,16 @@ class Lotus {
    * @param params
    *
    */
-  async getPlan(params: PlanDetailsParams): Promise<AxiosResponse<ListPlan>> {
+  async getPlan(
+    params: operations["apiPlansRetrieve"]["parameters"]["path"]
+  ): Promise<AxiosResponse<components["schemas"]["Plan"]>> {
     eventValidation(params, ValidateEventType.planDetails);
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
       REQUEST_URLS.GET_PLAN_DETAILS(params.planId)
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["Plan"]>(req);
   }
 
   /**
@@ -577,8 +578,8 @@ class Lotus {
    *
    */
   async getCustomerFeatureAccess(
-    params: CustomerFeatureAccess
-  ): Promise<AxiosResponse<CustomerFeatureAccessResponse[]>> {
+    params: operations["apiCustomerFeatureAccessList"]["parameters"]["query"]
+  ): Promise<AxiosResponse<components["schemas"]["GetFeatureAccess"][]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
     const data = {
       customer_id: params.customerId,
@@ -599,7 +600,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["GetFeatureAccess"][]>(req);
   }
 
   /**
@@ -609,8 +610,8 @@ class Lotus {
    *
    */
   async getCustomerMetricAccess(
-    params: CustomerMetricAccessParams
-  ): Promise<AxiosResponse<CustomerMetricAccessResponse[]>> {
+    params: operations["apiCustomerMetricAccessList"]["parameters"]["query"]
+  ): Promise<AxiosResponse<components["schemas"]["GetEventAccess"][]>> {
     eventValidation(params, ValidateEventType.customerMetricAccess);
     const data = {
       customer_id: params.customerId,
@@ -633,15 +634,17 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["GetEventAccess"][]>(req);
   }
 
   /** Void Credit
    * @param req
    */
   async voidCredit(
-    req: VoidCreditParams
-  ): Promise<AxiosResponse<CreditResponse>> {
+    req: operations["apiCreditsVoidCreate"]["parameters"]["path"]
+  ): Promise<
+    AxiosResponse<components["schemas"]["CustomerBalanceAdjustment"]>
+  > {
     eventValidation(req, ValidateEventType.voidCredit);
 
     const request = this.getRequestObject(
@@ -649,7 +652,7 @@ class Lotus {
       REQUEST_URLS.VOID_CREDIT(req.creditId)
     );
     this.setRequestTimeout(request);
-    return callReq(request);
+    return callReq<components["schemas"]["CustomerBalanceAdjustment"]>(request);
   }
 
   /**
@@ -657,8 +660,11 @@ class Lotus {
    * @param req
    */
   async updateCredit(
-    req: UpdateCreditParams
-  ): Promise<AxiosResponse<CreditResponse>> {
+    req: components["schemas"]["CustomerBalanceAdjustmentUpdateRequest"] &
+      operations["apiCreditsUpdateCreate"]["parameters"]["path"]
+  ): Promise<
+    AxiosResponse<components["schemas"]["CustomerBalanceAdjustment"]>
+  > {
     eventValidation(req, ValidateEventType.updateCredit);
     const data = {
       description: req.description || null,
@@ -670,7 +676,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(request);
-    return callReq(request);
+    return callReq<components["schemas"]["CustomerBalanceAdjustment"]>(request);
   }
 
   /**
@@ -678,8 +684,10 @@ class Lotus {
    * @param req
    */
   async createCredit(
-    req: CreateCreditParams
-  ): Promise<AxiosResponse<CreditResponse>> {
+    req: components["schemas"]["CustomerBalanceAdjustmentCreateRequest"]
+  ): Promise<
+    AxiosResponse<components["schemas"]["CustomerBalanceAdjustment"]>
+  > {
     eventValidation(req, ValidateEventType.createCredit);
     const data = {
       customer_id: req.customerId,
@@ -697,7 +705,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(request);
-    return callReq(request);
+    return callReq<components["schemas"]["CustomerBalanceAdjustment"]>(request);
   }
 
   /**
@@ -707,8 +715,8 @@ class Lotus {
    *
    */
   async listInvoices(
-    params: GetInvoicesParams
-  ): Promise<AxiosResponse<InvoiceResponse[]>> {
+    params: operations["apiInvoicesList"]["parameters"]["query"]
+  ): Promise<AxiosResponse<components["schemas"]["Invoice"][]>> {
     const data = {
       customer_id: params.customerId || null,
       payment_status: params.paymentStatus || null,
@@ -719,7 +727,7 @@ class Lotus {
       data
     );
     this.setRequestTimeout(req);
-    return callReq(req);
+    return callReq<components["schemas"]["Invoice"][]>(req);
   }
 
   _isErrorRetryable(error) {
@@ -748,8 +756,10 @@ class Lotus {
    * @param req
    */
   async listCredits(
-    req: ListCreditsParams
-  ): Promise<AxiosResponse<CreditResponse[]>> {
+    req: operations["apiCreditsList"]["parameters"]["query"]
+  ): Promise<
+    AxiosResponse<components["schemas"]["CustomerBalanceAdjustment"][]>
+  > {
     eventValidation(req, ValidateEventType.listCredits);
     const data = {
       customer_id: req.customerId,
@@ -769,7 +779,9 @@ class Lotus {
       data
     );
     this.setRequestTimeout(request);
-    return callReq(request);
+    return callReq<components["schemas"]["CustomerBalanceAdjustment"][]>(
+      request
+    );
   }
 
   private setRequestTimeout = (req) => {

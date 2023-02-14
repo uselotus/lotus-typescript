@@ -2319,7 +2319,7 @@ export interface operations {
     };
   };
   apiSubscriptionsAddCreate: {
-    requestBody: {
+    requestBody: { 
       content: {
         "application/json": components["schemas"]["SubscriptionRecordCreateRequest"];
         "application/x-www-form-urlencoded": components["schemas"]["SubscriptionRecordCreateRequest"];
