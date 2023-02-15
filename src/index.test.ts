@@ -1,6 +1,4 @@
 import { Lotus } from "./index";
-import { CreateCustomerParams } from "./data-types";
-import { format } from "date-fns";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -68,7 +66,7 @@ describe("Testing Customers Endpoints", () => {
     const customer = result.data?.length ? result.data[0] : null;
     if (customer) {
       const customerDetails = await lotus.getCustomer({
-        customerId: customer.customer_id,
+        customerId: customer.customerId,
       });
       expect(customerDetails.status).toEqual(200);
       const hasAllKeys = expectedCustomerKeys.every((item) =>
@@ -161,7 +159,7 @@ describe("Testing Plans Endpoints", () => {
     expect(result.status).toEqual(200);
     const plan = result.data?.length ? result.data[0] : null;
     if (plan) {
-      const plan_details_result = await lotus.getPlan({ planId: plan.plan_id });
+      const plan_details_result = await lotus.getPlan({ planId: plan.planId });
       expect(plan_details_result.status).toEqual(200);
       const expectedKeys = [
         "plan_name",
@@ -217,7 +215,7 @@ describe("Testing Invoices", () => {
   it("Test Invoices list", async () => {
     const result = await lotus.listInvoices({
       customerId: customer_id,
-      paymentStatus: "unpaid",
+      paymentStatus: ["unpaid"],
     });
     expect(result.status).toEqual(200);
     const data = result.data ? result.data[0] : null;
@@ -388,7 +386,7 @@ describe("Testing Subscriptions Endpoints", () => {
     const result = await lotus.createSubscription({
       customerId: customer_id,
       planId: plan_id,
-      startDate: date,
+      startDate: date.toISOString(),
       subscriptionFilters: [
         {
           value: "5",
