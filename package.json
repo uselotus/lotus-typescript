@@ -3,6 +3,7 @@
   "version": "1.0.29",
   "description": "Typescript sdk for Lotus APIs",
   "main": "dist/index.js",
+  "browser": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "/dist"
