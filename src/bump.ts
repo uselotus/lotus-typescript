@@ -37,11 +37,11 @@ type TVersionBumpType = "patch" | "major" | "minor";
   // commit what we already have to git because npm-bump creates a new commit too
   execSync("git add .");
   execSync("git commit -m 'update the types' ");
-  // if (versionBumpType === "patch") {
-  //   execSync("npx npm-bump patch");
-  // } else if (versionBumpType === "minor") {
-  //   execSync("npx npm-bump minor");
-  // } else {
-  //   execSync("npx npm-bump major");
-  // }
+  if (versionBumpType === "patch") {
+    execSync("npx npm-bump patch");
+  } else if (versionBumpType === "minor") {
+    execSync("npx npm-bump minor");
+  } else {
+    execSync("npx npm-bump major");
+  }
 })();
