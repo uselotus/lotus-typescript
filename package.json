@@ -8,7 +8,6 @@
   "files": [
     "/dist"
   ],
-  "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

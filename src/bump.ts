@@ -1,12 +1,12 @@
-import { execSync, exec } from "child_process";
-import { readFile, writeFile } from "fs/promises";
-import util from "util";
+const { execSync, exec } = require("child_process");
+const { readFile, writeFile } = require("fs/promises");
+const util = require("util");
 const execAsync = util.promisify(exec);
 
 type TVersionBumpType = "patch" | "major" | "minor";
 (async () => {
   const versionBumpType = process.argv[2] as TVersionBumpType;
-
+  console.log(versionBumpType);
   const pathToReadFrom = "./src/types.ts";
   const pathToWriteTo = "./src/types-camel.ts";
   await execAsync(
@@ -37,11 +37,11 @@ type TVersionBumpType = "patch" | "major" | "minor";
   // commit what we already have to git because npm-bump creates a new commit too
   execSync("git add .");
   execSync("git commit -m 'update the types' ");
-  if (versionBumpType === "patch") {
-    execSync("npx npm-bump patch");
-  } else if (versionBumpType === "minor") {
-    execSync("npx npm-bump minor");
-  } else {
-    execSync("npx npm-bump major");
-  }
+  // if (versionBumpType === "patch") {
+  //   execSync("npx npm-bump patch");
+  // } else if (versionBumpType === "minor") {
+  //   execSync("npx npm-bump minor");
+  // } else {
+  //   execSync("npx npm-bump major");
+  // }
 })();
