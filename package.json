@@ -12,7 +12,8 @@
   },
   "scripts": {
     "test": "jest",
-    "update-types": "ts-node-esm src/bump.ts"
+    "update-types": "ts-node-esm src/bump.ts",
+    "lint": "tsc"
   },
   "dependencies": {
     "@types/node": "^18.11.18",
