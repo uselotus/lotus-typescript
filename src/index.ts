@@ -232,6 +232,20 @@ class Lotus {
    * @param {Function} [callback] (optional)
    * @return {Lotus}
    */
+  trackEvent(message, callback) {
+    eventValidation(message, ValidateEventType.trackEvent);
+
+    const properties = Object.assign({}, message.properties, {
+      $lib: "lotus-node",
+    });
+
+    const apiMessage = Object.assign({}, message, { properties });
+
+    this.enqueue(apiMessage, callback);
+
+    return this;
+  }
+
   track_event(message, callback) {
     eventValidation(message, ValidateEventType.trackEvent);
 
