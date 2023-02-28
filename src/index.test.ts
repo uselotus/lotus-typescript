@@ -101,7 +101,7 @@ describe("Testing Customers Endpoints", () => {
     }
   });
 
-  it.only("Test Create Customer does not let you submit same details twice", async () => {
+  it("Test Create Customer does not let you submit same details twice", async () => {
     try {
       const result = await lotus.createCustomer({
         customerId: getId(5),
