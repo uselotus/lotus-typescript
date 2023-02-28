@@ -1,7 +1,7 @@
 import { Lotus } from "./index";
 import * as dotenv from "dotenv";
 dotenv.config();
-
+jest.setTimeout(20000);
 /// import API_KEY from env
 const API_KEY = process.env.API_KEY;
 const lotus = new Lotus(API_KEY, {
@@ -98,6 +98,24 @@ describe("Testing Customers Endpoints", () => {
       ];
       const hasAllKeys = keys.every((item) => customer.hasOwnProperty(item));
       expect(hasAllKeys).toEqual(true);
+    }
+  });
+
+  it.only("Test Create Customer does not let you submit same details twice", async () => {
+    try {
+      const result = await lotus.createCustomer({
+        customerId: getId(5),
+        email: "Johndoe@se.org",
+      });
+      expect(result.status).toEqual(201);
+
+      const secondResult = await lotus.createCustomer({
+        customerId: getId(5),
+        email: "Johndoe@se.org",
+      });
+      expect(secondResult.status).toEqual(400);
+    } catch (error) {
+      expect(error).toBeTruthy();
     }
   });
 

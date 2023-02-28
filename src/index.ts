@@ -13,6 +13,7 @@ import {
   CustomerDetailsParams,
   REQUEST_URLS,
   TrackEvent,
+  resp,
 } from "./data-types";
 import { ListCustomerResponse } from "./responses/ListCustomerResponse";
 import { BatchCustomers } from "./responses/BatchCustomers";
@@ -50,14 +51,22 @@ function convertKeysToCamelCase<T>(data: T): T {
 
   return data;
 }
-
+function isApiError(x: any): x is resp {
+  console.log(x.response.data);
+  if (x && typeof x === "object" && "response" in x) {
+    if ("data" in x.response) {
+      let error = x as resp;
+      throw new Error(error.response.data.detail);
+    }
+  }
+  throw new Error(x as string);
+}
 async function callReq<T>(req) {
   try {
     const response = await axios(req);
     return wrapResponse<T>(response);
   } catch (error) {
-    // console.log(error.response.data);
-    throw new Error(error);
+    isApiError(error);
   }
 }
 

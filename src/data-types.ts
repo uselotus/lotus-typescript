@@ -1,3 +1,23 @@
+import { AxiosError, AxiosResponse } from "axios";
+
+export interface ValidationError {
+  code: string;
+  detail: string;
+  attr: string;
+}
+export interface ErrorResponse {
+  type: URL;
+  title: string;
+  detail: string;
+  validation_errors?: ValidationError[];
+}
+
+export interface response extends AxiosResponse {
+  data: ErrorResponse;
+}
+export interface resp extends AxiosError {
+  response: response;
+}
 export enum REQUEST_TYPES {
   GET = "GET",
   POST = "POST",
