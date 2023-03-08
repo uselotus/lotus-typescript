@@ -1,10 +1,12 @@
 import { AxiosError, AxiosResponse } from "axios";
+import { components, operations } from "./types";
 
 export interface ValidationError {
   code: string;
   detail: string;
   attr: string;
 }
+
 export interface ErrorResponse {
   type: URL;
   title: string;
@@ -15,6 +17,7 @@ export interface ErrorResponse {
 export interface response extends AxiosResponse {
   data: ErrorResponse;
 }
+
 export interface resp extends AxiosError {
   response: response;
 }
@@ -28,7 +31,6 @@ export enum REQUEST_TYPES {
 export const REQUEST_URLS = {
   GET_CUSTOMERS: "/api/customers/",
   CREATE_CUSTOMERS: "/api/customers/",
-  CREATE_BATCH_CUSTOMERS: "/api/batch_create_customers/",
   GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
   CREATE_SUBSCRIPTION: "/api/subscriptions/add/",
   CANCEL_SUBSCRIPTION: `/api/subscriptions/cancel/`,
@@ -44,8 +46,8 @@ export const REQUEST_URLS = {
   GET_INVOICES: "/api/invoices/",
   LIST_CREDITS: "/api/credits/",
   CREATE_CREDIT: "/api/credits/",
-  VOID_CREDIT: (creditId) => `/api/credits/${creditId}/void/`,
-  UPDATE_CREDIT: (creditId) => `/api/credits/${creditId}/update`,
+  VOID_CREDIT: (creditId: string) => `/api/credits/${creditId}/void/`,
+  UPDATE_CREDIT: (creditId: string) => `/api/credits/${creditId}/update`,
 };
 
 export enum ValidateEventType {
@@ -68,138 +70,55 @@ export enum ValidateEventType {
   listSubscriptions = "listSubscriptions",
 }
 
-export interface CreateCustomerParams {
-  customerId: string;
-  email: string;
-  paymentProvider?: string;
-  paymentProviderId?: string;
-  customerName?: string;
-  properties?: string;
-  default_currency_code?: string;
-}
-
-export interface CreateBatchCustomerParams {
-  customers: CreateCustomerParams[];
-  behaviorOnExisting: "merge" | "ignore" | "overwrite";
-}
+export type CreateCustomerParams =
+  components["schemas"]["CustomerCreateRequest"];
 
 export interface CustomerDetailsParams {
-  customerId: string;
+  customer_id: string;
 }
 
-export interface CustomerDetailsParams {
-  customerId: string;
-}
+export type CreateSubscriptionParams =
+  components["schemas"]["SubscriptionRecordCreateRequest"];
 
-export interface subscriptionFilters {
-  propertyName: string;
-  value: string;
-}
+export type PlanDetailsParams =
+  operations["api_plans_retrieve"]["parameters"]["path"];
 
-export interface CreateSubscriptionParams {
-  customerId: string;
-  planId: string;
-  startDate: Date;
-  endDate?: Date;
-  autoRenew?: boolean;
-  isNew?: boolean;
-  subscriptionFilters?: subscriptionFilters[];
-}
+export type CustomerMetricAccessParams =
+  operations["api_customer_metric_access_list"]["parameters"]["query"];
 
-export interface SubscriptionDetailsParams {
-  subscriptionId: string;
-}
+export type CustomerFeatureAccess =
+  operations["api_customer_feature_access_list"]["parameters"]["query"];
 
-export interface PlanDetailsParams {
-  planId: string;
-}
+export type TrackEventEntity = components["schemas"]["Event"];
 
-export interface CustomerMetricAccessParams {
-  customerId: string;
-  metricId?: string;
-  eventName?: string;
-  subscriptionFilters?: subscriptionFilters[];
-}
+export type TrackEvent = components["schemas"]["BatchEventRequest"];
 
-export interface CustomerFeatureAccess {
-  customerId: string;
-  featureName: string;
-  subscriptionFilters?: subscriptionFilters[];
-}
+export type ListAllSubscriptionsParams =
+  operations["api_subscriptions_list"]["parameters"]["query"];
 
-export interface TrackEventEntity {
-  eventName: string;
-  customerId: string;
-  idempotencyId: string;
-  timeCreated: Date;
-  properties?: any;
-}
+export type CancelSubscriptionParams =
+  | components["schemas"]["SubscriptionRecordCancelRequest"] &
+      operations["api_subscriptions_cancel_create"]["parameters"]["query"];
 
-export interface TrackEvent {
-  batch: TrackEventEntity[];
-}
+export type ChangeSubscriptionParams =
+  | components["schemas"]["SubscriptionRecordUpdateRequest"] &
+      operations["api_subscriptions_update_create"]["parameters"]["query"];
 
-export interface ListAllSubscriptionsParams {
-  customerId: string;
-  planId?: string;
-  rangeEnd?: string;
-  rangeStart?: string;
-  status?: string[];
-}
+export type GetPlanParams =
+  operations["api_plans_retrieve"]["parameters"]["path"];
 
-export interface CancelSubscriptionParams {
-  planId: string;
-  customerId: string;
-  subscriptionFilters?: subscriptionFilters[];
-  invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
-  flatFeeBehavior?: "refund" | "prorate" | "charge_full";
-  usageBehavior?: "bill_full" | "bill_none";
-}
+export type ListCreditsParams =
+  operations["api_credits_list"]["parameters"]["query"];
 
-export interface ChangeSubscriptionParams {
-  customerId: string;
-  planId?: string;
-  subscriptionFilters?: subscriptionFilters[];
-  replacePlanId?: string;
-  invoicingBehavior?: "add_to_next_invoice" | "invoice_now";
-  usageBehavior?: "transfer_to_new_subscription" | "keep_separate";
-  turnOffAutoRenew?: boolean;
-  endDate?: string;
-}
+export type CreateCreditParams =
+  components["schemas"]["CustomerBalanceAdjustmentCreateRequest"];
 
-export interface GetInvoicesParams {
-  customerId?: string;
-  paymentStatus?: "paid" | "unpaid";
-}
+export type GetInvoicesParams =
+  operations["api_invoices_list"]["parameters"]["query"];
 
-export interface ListCreditsParams {
-  customerId: string;
-  status?: "active" | "inactive";
-  issuedBefore?: Date;
-  issuedAfter?: Date;
-  expiresBefore?: Date;
-  expiresAfter?: Date;
-  effectiveBefore?: Date;
-  effectiveAfter?: Date;
-  currencyCode?: string;
-}
+export type UpdateCreditParams =
+  components["schemas"]["CustomerBalanceAdjustmentUpdateRequest"] &
+    operations["api_credits_update_create"]["parameters"]["path"];
 
-export interface CreateCreditParams {
-  customerId: string;
-  amount: number;
-  currencyCode: string;
-  description?: string;
-  expiresAt?: Date;
-  effectiveAt?: Date;
-  amountPaid?: number;
-  amountPaidCurrencyCode?: string;
-}
-
-export interface VoidCreditParams {
-  creditId: string;
-}
-export interface UpdateCreditParams {
-  description?: string;
-  expiresAt?: Date;
-  creditId: string;
-}
+export type VoidCreditParams =
+  operations["api_credits_void_create"]["parameters"]["path"];
