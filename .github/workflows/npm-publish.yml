@@ -20,6 +20,8 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: 16
+      - name: Debug Environment
+        run: env
       - run: export API_KEY=$API_KEY && npm install
       - run: export API_KEY=$API_KEY && npm test
 
