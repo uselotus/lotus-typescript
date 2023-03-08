@@ -18,11 +18,12 @@ First grab a new api key from the Settings tab. Then change the host to wherever
 
 ```jsx
 const lotus = new Lotus(api_key, {
-    host: 'https://www.uselotus.app/', // You can omit this line if using Lotus Cloud
-})
+  host: "https://api.uselotus.io/", // You can omit this line if using Lotus Cloud
+});
 ```
 
 ## Currently Supported Methods
+
 ```
 1. TrackEvent
 2. Get All Customers
@@ -30,17 +31,18 @@ const lotus = new Lotus(api_key, {
 4. Create Customer
 5. Create Subscription
 6. Cancel Subscription
-7. Change Subscription
+7. Update Subscription
 8. Get All Subscriptions
 9. Get Subscription Details
 10. Get All Plans
-11. Get Customer Access
-```
+11. Get Feature Access
+12. Get Metric Access
 
+```
 
 ## Making calls
 
-Please refer to the [Lotus documentation](https://docs.uselotus.io/docs/api/) for more information on how to use the library.
+Please refer to the [Lotus documentation](https://docs.uselotus.io/api-reference/typescript-guide) for more information on how to use the library.
 
 ## Questions?
 
