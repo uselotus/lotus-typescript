@@ -7,14 +7,16 @@ jest.setTimeout(20000);
 /// import API_KEY from env
 const API_KEY = process.env.API_KEY;
 
+const LOTUS_HOST = process.env.LOTUS_HOST || "https://api.uselotus.io/";
 const lotus = new Lotus(API_KEY, {
-  host: "https://api.uselotus.io/",
+  host: LOTUS_HOST,
   flushAt: 1,
 });
 
 let date = new Date();
-const customer_id = "1212";
-const plan_id = "plan_e959828592e44439a2a68981a8b3e0b7";
+const customer_id = process.env.CUSTOMER_ID || "1212";
+const plan_id = process.env.PLAN_ID || "plan_e959828592e44439a2a68981a8b3e0b7";
+const feature_id = process.env.FEATURE_ID || "feature_1";
 
 const expectedCustomerKeys = [
   "customer_id",
@@ -217,7 +219,7 @@ describe("Testing Plans Endpoints", () => {
 describe("Testing Customer Feature and Metric Access", () => {
   it("Test Customer feature Access", async () => {
     const result = await lotus.getCustomerFeatureAccess({
-      feature_name: "feature 1",
+      feature_name: feature_id,
       customer_id,
     });
     expect(result.status).toEqual(200);
@@ -321,7 +323,7 @@ describe("Testing Subscriptions Endpoints", () => {
       subscription_filters: [
         {
           value: "5",
-          property_name: "test1",
+          property_name: "region",
         },
       ],
     });
