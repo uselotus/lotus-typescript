@@ -1,6 +1,6 @@
 import path from "path";
 import fsp from "fs/promises";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 import { execa } from "execa";
 import chalk from "chalk";
 import inquirer from "inquirer";
@@ -9,11 +9,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const TYPES_FILE = path.resolve(path.join(__dirname, "src", "types.ts"));
 
-const runOpenApiGenerator = async () => {
+const runOpenApiGenerator = async (branchName) => {
   try {
     await execa("npx", [
       "openapi-typescript",
-      "https://raw.githubusercontent.com/uselotus/lotus/main/docs/openapi.yaml",
+      `https://raw.githubusercontent.com/uselotus/lotus/${branchName}/docs/openapi.yaml`,
       "--output",
       TYPES_FILE,
     ]);
@@ -37,6 +37,11 @@ const bumpVersion = async (bump) => {
 inquirer
   .prompt([
     {
+      type: "input",
+      name: "branchName",
+      message: "Specify the branch name:",
+    },
+    {
       type: "list",
       name: "bump",
       message: "Specify the type of version bump:",
@@ -44,9 +49,9 @@ inquirer
     },
   ])
   .then(async (answers) => {
-    const { bump } = answers;
+    const { branchName, bump } = answers;
 
-    await runOpenApiGenerator();
+    await runOpenApiGenerator(branchName);
 
     await bumpVersion(bump);
 
