@@ -32,16 +32,24 @@ export const REQUEST_URLS = {
   GET_CUSTOMERS: "/api/customers/",
   CREATE_CUSTOMERS: "/api/customers/",
   GET_CUSTOMER_DETAIL: (customerId) => `/api/customers/${customerId}/`,
-  CREATE_SUBSCRIPTION: "/api/subscriptions/add/",
-  CANCEL_SUBSCRIPTION: `/api/subscriptions/cancel/`,
-  CHANGE_SUBSCRIPTION: `/api/subscriptions/update/`,
+  CREATE_SUBSCRIPTION: "/api/subscriptions/",
+  CANCEL_SUBSCRIPTION: (subscription_id) =>
+    `/api/subscriptions/${subscription_id}/cancel/`,
+  UPDATE_SUBSCRIPTION: (subscription_id) =>
+    `/api/subscriptions/${subscription_id}/update/`,
+  SWITCH_SUBSCRIPTION: (subscription_id) =>
+    `/api/subscriptions/${subscription_id}/switch_plan/`,
   GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
   GET_SUBSCRIPTION_DETAILS: (subscriptionId) =>
     `/api/subscriptions/${subscriptionId}/`,
+  ATTATCH_ADDON: (subscriptionId) =>
+    `/api/subscriptions/${subscriptionId}/addons/attach/`,
+  CANCEL_ADDON: (subscriptionId, addonId) =>
+    `/api/subscriptions/${subscriptionId}/addons/${addonId}/cancel/`,
   GET_ALL_PLANS: "/api/plans/",
   GET_PLAN_DETAILS: (planId) => `/api/plans/${planId}/`,
-  GET_CUSTOMER_FEATURE_ACCESS: "/api/customer_feature_access/",
-  GET_CUSTOMER_METRIC_ACCESS: "/api/customer_metric_access/",
+  GET_FEATURE_ACCESS: "/api/feature_access/",
+  GET_METRIC_ACCESS: "/api/metric_access/",
   TRACK_EVENT: "/api/track/",
   GET_INVOICES: "/api/invoices/",
   LIST_CREDITS: "/api/credits/",
@@ -56,7 +64,10 @@ export enum ValidateEventType {
   customerDetails = "customerDetails",
   createSubscription = "createSubscription",
   cancelSubscription = "cancelSubscription",
-  changeSubscription = "changeSubscription",
+  updateSubscription = "updateSubscription",
+  switchSubscription = "switchSubscription",
+  attachAddon = "attachAddon",
+  cancelAddon = "cancelAddon",
   subscriptionDetails = "subscriptionDetails",
   planDetails = "planDetails",
   customerMetricAccess = "customerMetricAccess",

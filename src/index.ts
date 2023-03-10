@@ -338,9 +338,82 @@ class Lotus {
 
     const req = this.getRequestObject(
       REQUEST_TYPES.POST,
-      REQUEST_URLS.CHANGE_SUBSCRIPTION,
+      REQUEST_URLS.UPDATE_SUBSCRIPTION,
       body,
       params
+    );
+
+    this.setRequestTimeout(req);
+    return callReq(req);
+  }
+
+  /**
+   * Switch a Subscription Plan.
+   */
+  async switchSubscription(
+    params: SwitchSubscriptionParams
+  ): Promise<AxiosResponse<CreateSubscription>> {
+    eventValidation(params, ValidateEventType.switchSubscription);
+
+    const body = {
+      switch_plan_id: params.switch_plan_id,
+      invoicing_behavior: params.invoicing_behavior || null,
+      usage_behavior: params.usage_behavior || null,
+      component_fixed_charges_initial_units: params,
+    };
+
+    const req = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.SWITCH_SUBSCRIPTION,
+      body,
+      params
+    );
+
+    this.setRequestTimeout(req);
+    return callReq(req);
+  }
+
+  /**
+   * Attach an Addon to a Subscription.
+   */
+  async attachAddon(
+    params: AttachAddonParams
+  ): Promise<AxiosResponse<CreateSubscription>> {
+    eventValidation(params, ValidateEventType.attachAddon);
+
+    const body = {
+      addon_id: params.addon_id,
+      quantity: params.quantity,
+    };
+
+    const req = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.ATTATCH_ADDON(params.subscription_id),
+      body
+    );
+
+    this.setRequestTimeout(req);
+    return callReq(req);
+  }
+
+  //Add TODO
+
+  /**
+   * Attach an Addon to a Subscription.
+   */
+  async cancelAddon(params: CancelAddonParams): Promise<AxiosResponse<>> {
+    eventValidation(params, ValidateEventType.cancelAddon);
+
+    const body = {
+      flat_fee_behavior: params.flat_fee_behavior,
+      usage_behavior: params.usage_behavior,
+      invoicing_behavior: params.invoicing_behavior,
+    };
+
+    const req = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.CANCEL_ADDON(params.subscription_id, params.addon_id),
+      body
     );
 
     this.setRequestTimeout(req);
@@ -367,10 +440,14 @@ class Lotus {
     return callReq<components["schemas"]["SubscriptionRecord"][]>(req);
   }
 
-  async listPlans(): Promise<AxiosResponse<components["schemas"]["Plan"][]>> {
+  async listPlans(
+    params: ListAllPlansParams
+  ): Promise<AxiosResponse<components["schemas"]["Plan"][]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_ALL_PLANS
+      REQUEST_URLS.GET_ALL_PLANS,
+      null,
+      params
     );
     this.setRequestTimeout(req);
     return callReq<components["schemas"]["Plan"][]>(req);
@@ -383,7 +460,9 @@ class Lotus {
 
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_PLAN_DETAILS(params.plan_id)
+      REQUEST_URLS.GET_PLAN_DETAILS(params.plan_id),
+      null,
+      params
     );
     this.setRequestTimeout(req);
     return callReq<components["schemas"]["Plan"]>(req);
@@ -402,7 +481,7 @@ class Lotus {
 
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_CUSTOMER_FEATURE_ACCESS,
+      REQUEST_URLS.GET_FEATURE_ACCESS,
       null,
       params
     );
@@ -416,14 +495,14 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerMetricAccess(
+  async getMetricAccess(
     params: CustomerMetricAccessParams
   ): Promise<AxiosResponse<components["schemas"]["GetEventAccess"][]>> {
     eventValidation(params, ValidateEventType.customerMetricAccess);
 
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,
-      REQUEST_URLS.GET_CUSTOMER_METRIC_ACCESS,
+      REQUEST_URLS.GET_METRIC_ACCESS,
       null,
       params
     );
