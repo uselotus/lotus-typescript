@@ -1,5 +1,4 @@
 import {
-  ChangeSubscriptionParams,
   CreateCustomerParams,
   CreateSubscriptionParams,
   CustomerDetailsParams,
@@ -14,6 +13,7 @@ import {
   CreateCreditParams,
   VoidCreditParams,
   UpdateCreditParams,
+  UpdateSubscriptionParams,
 } from "./data-types";
 
 export function eventValidation(event: any, type: ValidateEventType) {
@@ -24,7 +24,7 @@ export function eventValidation(event: any, type: ValidateEventType) {
       return validateCustomerDetailsEvent(event);
     case ValidateEventType.createSubscription:
       return validateCreateSubscriptionEvent(event);
-    case ValidateEventType.changeSubscription:
+    case ValidateEventType.updateSubscription:
       return validateChangeSubscriptionEvent(event);
     case ValidateEventType.planDetails:
       return validatePlanDetailsEvent(event);
@@ -113,15 +113,9 @@ function validateCreateSubscriptionEvent(event: CreateSubscriptionParams) {
 /**
  * Validate a "ChangeSubscription" event.
  */
-function validateChangeSubscriptionEvent(event: ChangeSubscriptionParams) {
-  if (!event.customer_id) {
-    throw new Error("customer_id is a required key");
-  }
-  if (
-    event.subscription_filters &&
-    !Array.isArray(event.subscription_filters)
-  ) {
-    throw new Error("subscription_filters must be an array");
+function validateChangeSubscriptionEvent(event: UpdateSubscriptionParams) {
+  if (!event.subscription_id) {
+    throw new Error("subscription_id is a required key");
   }
 }
 
@@ -133,11 +127,14 @@ function validateCustomerFeatureAccessEvent(event: CustomerFeatureAccess) {
     throw new Error("customer_id is a required key");
   }
 
-  if (!event.feature_name) {
+  if (!event.feature_id) {
     throw new Error("feature_name is a required key");
   }
 
-  if (event.subscription_filters && !Array.isArray(event.subscription_filters)) {
+  if (
+    event.subscription_filters &&
+    !Array.isArray(event.subscription_filters)
+  ) {
     throw new Error("subscription_filters must be an array");
   }
 }
@@ -150,7 +147,10 @@ function validateCustomerMetricAccessEvent(event: CustomerMetricAccessParams) {
     throw new Error("customer_id is a required key");
   }
 
-  if (event.subscription_filters && !Array.isArray(event.subscription_filters)) {
+  if (
+    event.subscription_filters &&
+    !Array.isArray(event.subscription_filters)
+  ) {
     throw new Error("subscription_filters must be an array");
   }
 }
@@ -179,11 +179,8 @@ function validateTrackEventEvent(event: TrackEvent) {
  */
 
 function validateDeleteSubscriptionEvent(event: CancelSubscriptionParams) {
-  if (!event.plan_id) {
-    throw new Error("plan_id is a required key");
-  }
-  if (!event.customer_id) {
-    throw new Error("customer_id is a required key");
+  if (!event.subscription_id) {
+    throw new Error("subscription_id is a required key");
   }
 
   const allowed_types = ["refund", "prorate", "charge_full"];

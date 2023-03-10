@@ -9,7 +9,6 @@ import {
   ValidateEventType,
   REQUEST_TYPES,
   CancelSubscriptionParams,
-  ChangeSubscriptionParams,
   CustomerDetailsParams,
   REQUEST_URLS,
   TrackEvent,
@@ -24,6 +23,11 @@ import {
   VoidCreditParams,
   CustomerMetricAccessParams,
   CustomerFeatureAccess,
+  SwitchSubscriptionParams,
+  AttachAddonParams,
+  ListAllPlansParams,
+  CancelAddonParams,
+  UpdateSubscriptionParams,
 } from "./data-types";
 import { ListCustomerResponse } from "./responses/ListCustomerResponse";
 import { CreateSubscription } from "./responses/CreateSubscription";
@@ -294,23 +298,15 @@ class Lotus {
   async cancelSubscription(params: CancelSubscriptionParams) {
     eventValidation(params, ValidateEventType.cancelSubscription);
 
-    const body: componentsCamel["schemas"]["SubscriptionRecordCancelRequest"] =
-      {
-        flat_fee_behavior: params.flat_fee_behavior as
-          | "refund"
-          | "charge_prorated"
-          | ""
-          | "charge_full",
-        usage_behavior: params.usage_behavior as "bill_full" | "bill_none",
-        invoicing_behavior: params.invoicing_behavior as
-          | "add_to_next_invoice"
-          | "invoice_now",
-      };
+    const body = {
+      flat_fee_behavior: params.flat_fee_behavior || null,
+      usage_behavior: params.usage_behavior || null,
+      invoicing_behavior: params.invoicing_behavior || null,
+    };
     const req = this.getRequestObject(
       REQUEST_TYPES.POST,
-      REQUEST_URLS.CANCEL_SUBSCRIPTION,
-      body,
-      params
+      REQUEST_URLS.CANCEL_SUBSCRIPTION(params.subscription_id),
+      body
     );
 
     this.setRequestTimeout(req);
@@ -324,23 +320,19 @@ class Lotus {
    *
    */
   async updateSubscription(
-    params: ChangeSubscriptionParams
+    params: UpdateSubscriptionParams
   ): Promise<AxiosResponse<CreateSubscription>> {
-    eventValidation(params, ValidateEventType.changeSubscription);
+    eventValidation(params, ValidateEventType.updateSubscription);
 
     const body = {
-      replace_plan_id: params.replace_plan_id || null,
-      invoicing_behavior: params.invoicing_behavior || null,
-      usage_behavior: params.usage_behavior || null,
       turn_off_auto_renew: params.turn_off_auto_renew || null,
       end_date: params.end_date || null,
     };
 
     const req = this.getRequestObject(
       REQUEST_TYPES.POST,
-      REQUEST_URLS.UPDATE_SUBSCRIPTION,
-      body,
-      params
+      REQUEST_URLS.UPDATE_SUBSCRIPTION(params.subscription_id),
+      body
     );
 
     this.setRequestTimeout(req);
@@ -364,9 +356,8 @@ class Lotus {
 
     const req = this.getRequestObject(
       REQUEST_TYPES.POST,
-      REQUEST_URLS.SWITCH_SUBSCRIPTION,
-      body,
-      params
+      REQUEST_URLS.SWITCH_SUBSCRIPTION(params.subscription_id),
+      body
     );
 
     this.setRequestTimeout(req);
@@ -378,7 +369,7 @@ class Lotus {
    */
   async attachAddon(
     params: AttachAddonParams
-  ): Promise<AxiosResponse<CreateSubscription>> {
+  ): Promise<AxiosResponse<components["schemas"]["AddOnSubscriptionRecord"]>> {
     eventValidation(params, ValidateEventType.attachAddon);
 
     const body = {
@@ -401,19 +392,15 @@ class Lotus {
   /**
    * Attach an Addon to a Subscription.
    */
-  async cancelAddon(params: CancelAddonParams): Promise<AxiosResponse<>> {
+  async cancelAddon(
+    params: CancelAddonParams
+  ): Promise<AxiosResponse<components["schemas"]["AddOnSubscriptionRecord"]>> {
     eventValidation(params, ValidateEventType.cancelAddon);
-
-    const body = {
-      flat_fee_behavior: params.flat_fee_behavior,
-      usage_behavior: params.usage_behavior,
-      invoicing_behavior: params.invoicing_behavior,
-    };
 
     const req = this.getRequestObject(
       REQUEST_TYPES.POST,
       REQUEST_URLS.CANCEL_ADDON(params.subscription_id, params.addon_id),
-      body
+      null
     );
 
     this.setRequestTimeout(req);
@@ -441,7 +428,7 @@ class Lotus {
   }
 
   async listPlans(
-    params: ListAllPlansParams
+    params?: ListAllPlansParams
   ): Promise<AxiosResponse<components["schemas"]["Plan"][]>> {
     const req = this.getRequestObject(
       REQUEST_TYPES.GET,

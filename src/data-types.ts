@@ -70,6 +70,7 @@ export enum ValidateEventType {
   cancelAddon = "cancelAddon",
   subscriptionDetails = "subscriptionDetails",
   planDetails = "planDetails",
+  listPlans = "listPlans",
   customerMetricAccess = "customerMetricAccess",
   customerFeatureAccess = "customerFeatureAccess",
   createCustomersBatch = "createCustomersBatch",
@@ -88,6 +89,8 @@ export interface CustomerDetailsParams {
   customer_id: string;
 }
 
+export type ListAllPlansParams = operations["api_plans_list"]["parameters"];
+
 export type CreateSubscriptionParams =
   components["schemas"]["SubscriptionRecordCreateRequest"];
 
@@ -95,12 +98,12 @@ export type PlanDetailsParams =
   operations["api_plans_retrieve"]["parameters"]["path"];
 
 export type CustomerMetricAccessParams =
-  operations["api_customer_metric_access_list"]["parameters"]["query"];
+  operations["api_metric_access_retrieve"]["parameters"]["query"];
 
 export type CustomerFeatureAccess =
-  operations["api_customer_feature_access_list"]["parameters"]["query"];
+  operations["api_feature_access_retrieve"]["parameters"]["query"];
 
-export type TrackEventEntity = components["schemas"]["Event"];
+export type TrackEventEntity = components["schemas"]["EventRequest"];
 
 export type TrackEvent = components["schemas"]["BatchEventRequest"];
 
@@ -109,11 +112,22 @@ export type ListAllSubscriptionsParams =
 
 export type CancelSubscriptionParams =
   | components["schemas"]["SubscriptionRecordCancelRequest"] &
-      operations["api_subscriptions_cancel_create"]["parameters"]["query"];
+      operations["api_subscriptions_cancel_create_2"]["parameters"]["path"];
 
-export type ChangeSubscriptionParams =
+export type AttachAddonParams =
+  | components["schemas"]["AddOnSubscriptionRecordCreateRequest"] &
+      operations["api_subscriptions_addons_attach_create"]["parameters"]["path"];
+
+export type CancelAddonParams =
+  operations["api_subscriptions_addons_cancel_create"]["parameters"]["path"];
+
+export type UpdateSubscriptionParams =
   | components["schemas"]["SubscriptionRecordUpdateRequest"] &
-      operations["api_subscriptions_update_create"]["parameters"]["query"];
+      operations["api_subscriptions_update_create_2"]["parameters"]["path"];
+
+export type SwitchSubscriptionParams =
+  | components["schemas"]["SubscriptionRecordSwitchPlanRequest"] &
+      operations["api_subscriptions_switch_plan_create"]["parameters"]["path"];
 
 export type GetPlanParams =
   operations["api_plans_retrieve"]["parameters"]["path"];

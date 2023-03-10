@@ -17,6 +17,7 @@ let date = new Date();
 const customer_id = process.env.CUSTOMER_ID || "1212";
 const plan_id = process.env.PLAN_ID || "plan_e959828592e44439a2a68981a8b3e0b7";
 const feature_id = process.env.FEATURE_ID || "feature_1";
+var subscription_id;
 
 const expectedCustomerKeys = [
   "customer_id",
@@ -219,7 +220,7 @@ describe("Testing Plans Endpoints", () => {
 describe("Testing Customer Feature and Metric Access", () => {
   it("Test Customer feature Access", async () => {
     const result = await lotus.getCustomerFeatureAccess({
-      feature_name: feature_id,
+      feature_id: feature_id,
       customer_id,
     });
     expect(result.status).toEqual(200);
@@ -235,8 +236,8 @@ describe("Testing Customer Feature and Metric Access", () => {
   });
 
   it("Test Customer Metric Access", async () => {
-    const result = await lotus.getCustomerMetricAccess({
-      event_name: "generate_text",
+    const result = await lotus.getMetricAccess({
+      metric_id: "23421",
       customer_id,
     });
 
@@ -307,6 +308,8 @@ describe("Testing Subscriptions Endpoints", () => {
         "fully_billed",
       ];
 
+      subscription_id = subscription.subscription_id;
+
       const hasAllKeys = keys.every((item) =>
         subscription.hasOwnProperty(item)
       );
@@ -354,8 +357,7 @@ describe("Testing Subscriptions Endpoints", () => {
 
   it("Test Update Subscription", async () => {
     const result = await lotus.updateSubscription({
-      customer_id,
-      plan_id: plan_id,
+      subscription_id,
       turn_off_auto_renew: true,
     });
 
@@ -383,14 +385,7 @@ describe("Testing Subscriptions Endpoints", () => {
 
   it("Test Cancel Subscription That Doesn't Exist", async () => {
     const result = await lotus.cancelSubscription({
-      customer_id,
-      plan_id,
-      subscription_filters: [
-        {
-          value: "4",
-          property_name: "test1",
-        },
-      ],
+      subscription_id: "123",
     });
 
     expect(result.status).toEqual(200);
@@ -398,14 +393,7 @@ describe("Testing Subscriptions Endpoints", () => {
 
   it("Test Cancel Subscription That Does Exist", async () => {
     const result = await lotus.cancelSubscription({
-      customer_id,
-      plan_id: plan_id,
-      subscription_filters: [
-        {
-          value: "5",
-          property_name: "test1",
-        },
-      ],
+      subscription_id,
     });
     expect(result.status).toEqual(200);
   });
