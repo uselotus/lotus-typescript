@@ -327,6 +327,7 @@ class Lotus {
     const body = {
       turn_off_auto_renew: params.turn_off_auto_renew || null,
       end_date: params.end_date || null,
+      metadata: params.metadata || null,
     };
 
     const req = this.getRequestObject(
@@ -374,7 +375,8 @@ class Lotus {
 
     const body = {
       addon_id: params.addon_id,
-      quantity: params.quantity,
+      quantity: params.quantity || null,
+      metadata: params.metadata || null,
     };
 
     const req = this.getRequestObject(
