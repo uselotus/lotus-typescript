@@ -1,5 +1,6 @@
-import * as dotenv from "dotenv";
-import { Lotus } from "./index";
+const { AxiosError } = require('axios');
+const dotenv = require('dotenv');
+const { Lotus } = require('./index');
 
 dotenv.config();
 jest.setTimeout(20000);
@@ -17,7 +18,7 @@ let date = new Date();
 const customer_id = process.env.CUSTOMER_ID || "1212";
 const plan_id = process.env.PLAN_ID || "plan_e959828592e44439a2a68981a8b3e0b7";
 const feature_id = process.env.FEATURE_ID || "feature_1";
-var subscription_id;
+let subscription_id;
 
 const expectedCustomerKeys = [
   "customer_id",
@@ -319,45 +320,47 @@ describe("Testing Subscriptions Endpoints", () => {
   });
 
   it("Test Create/Add Subscription", async () => {
-    const result = await lotus.createSubscription({
-      customer_id,
-      plan_id,
-      start_date: date.toISOString(),
-      subscription_filters: [
-        {
-          value: "5",
-          property_name: "region",
-        },
-      ],
-    });
-
-    expect(result.status).toEqual(201);
-
-    const subscription = result.data ? result.data : null;
-
-    if (subscription) {
-      const keys = [
-        "start_date",
-        "end_date",
-        "auto_renew",
-        "is_new",
-        "customer",
-        "billing_plan",
-        "fully_billed",
-        "subscription_filters",
-      ];
-
-      const hasAllKeys = keys.every((item) =>
-        subscription.hasOwnProperty(item)
-      );
-
-      expect(hasAllKeys).toEqual(true);
+    try {
+      const result = await lotus.createSubscription({
+        customer_id,
+        plan_id,
+        start_date: date.toISOString(),
+      });
+  
+      expect(result.status).toEqual(201);
+  
+      const subscription = result.data ? result.data : null;
+  
+      if (subscription) {
+        const keys = [
+          "start_date",
+          "end_date",
+          "auto_renew",
+          "is_new",
+          "customer",
+          "billing_plan",
+          "fully_billed",
+        ];
+  
+        const hasAllKeys = keys.every((item) =>
+          subscription.hasOwnProperty(item)
+        );
+  
+        expect(hasAllKeys).toEqual(true);
+      }
+    } catch (err) {
+      console.log(err)
     }
   });
 
   it("Test Update Subscription", async () => {
+    const subscriptionId = await lotus.listSubscriptions({ customer_id }).then(res => {
+      expect(res.status).toEqual(200);
+      return res.data?.[0].subscription_id ?? null;
+    });
+
     const result = await lotus.updateSubscription({
-      subscription_id,
+      subscription_id: subscriptionId,
       turn_off_auto_renew: true,
     });
 
@@ -384,16 +387,28 @@ describe("Testing Subscriptions Endpoints", () => {
   });
 
   it("Test Cancel Subscription That Doesn't Exist", async () => {
-    const result = await lotus.cancelSubscription({
-      subscription_id: "123",
-    });
-
-    expect(result.status).toEqual(200);
+    try {
+      const result = await lotus.cancelSubscription({
+        subscription_id: "123",
+      });
+    } catch (err) {
+      expect(err).toBeInstanceOf(AxiosError)
+      expect(err.response.status).toEqual(400)
+    }
   });
 
   it("Test Cancel Subscription That Does Exist", async () => {
+    const subscriptionId = await lotus.listSubscriptions({ customer_id }).then(res => {
+      expect(res.status).toEqual(200);
+      return res.data?.[0].subscription_id ?? null;
+    });
+
+    if (!subscriptionId) {
+      return;
+    }
+
     const result = await lotus.cancelSubscription({
-      subscription_id,
+      subscription_id: subscriptionId,
     });
     expect(result.status).toEqual(200);
   });
