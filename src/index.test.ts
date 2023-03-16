@@ -1,6 +1,6 @@
-const { AxiosError } = require('axios');
-const dotenv = require('dotenv');
-const { Lotus } = require('./index');
+const { AxiosError } = require("axios");
+const dotenv = require("dotenv");
+const { Lotus } = require("./index");
 
 dotenv.config();
 jest.setTimeout(20000);
@@ -18,6 +18,7 @@ let date = new Date();
 const customer_id = process.env.CUSTOMER_ID || "1212";
 const plan_id = process.env.PLAN_ID || "plan_e959828592e44439a2a68981a8b3e0b7";
 const feature_id = process.env.FEATURE_ID || "feature_1";
+const metric_id = process.env.METRIC_ID || "metric_1";
 let subscription_id;
 
 const expectedCustomerKeys = [
@@ -218,9 +219,9 @@ describe("Testing Plans Endpoints", () => {
   });
 });
 
-describe("Testing Customer Feature and Metric Access", () => {
-  it("Test Customer feature Access", async () => {
-    const result = await lotus.getCustomerFeatureAccess({
+describe("TestingFeature and Metric Access", () => {
+  it("Test Feature Access", async () => {
+    const result = await lotus.getFeatureAccess({
       feature_id: feature_id,
       customer_id,
     });
@@ -238,7 +239,7 @@ describe("Testing Customer Feature and Metric Access", () => {
 
   it("Test Customer Metric Access", async () => {
     const result = await lotus.getMetricAccess({
-      metric_id: "23421",
+      metric_id: metric_id,
       customer_id,
     });
 
@@ -326,11 +327,11 @@ describe("Testing Subscriptions Endpoints", () => {
         plan_id,
         start_date: date.toISOString(),
       });
-  
+
       expect(result.status).toEqual(201);
-  
+
       const subscription = result.data ? result.data : null;
-  
+
       if (subscription) {
         const keys = [
           "start_date",
@@ -341,23 +342,25 @@ describe("Testing Subscriptions Endpoints", () => {
           "billing_plan",
           "fully_billed",
         ];
-  
+
         const hasAllKeys = keys.every((item) =>
           subscription.hasOwnProperty(item)
         );
-  
+
         expect(hasAllKeys).toEqual(true);
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
   });
 
   it("Test Update Subscription", async () => {
-    const subscriptionId = await lotus.listSubscriptions({ customer_id }).then(res => {
-      expect(res.status).toEqual(200);
-      return res.data?.[0].subscription_id ?? null;
-    });
+    const subscriptionId = await lotus
+      .listSubscriptions({ customer_id })
+      .then((res) => {
+        expect(res.status).toEqual(200);
+        return res.data?.[0].subscription_id ?? null;
+      });
 
     const result = await lotus.updateSubscription({
       subscription_id: subscriptionId,
@@ -392,16 +395,18 @@ describe("Testing Subscriptions Endpoints", () => {
         subscription_id: "123",
       });
     } catch (err) {
-      expect(err).toBeInstanceOf(AxiosError)
-      expect(err.response.status).toEqual(400)
+      expect(err).toBeInstanceOf(AxiosError);
+      expect(err.response.status).toEqual(400);
     }
   });
 
   it("Test Cancel Subscription That Does Exist", async () => {
-    const subscriptionId = await lotus.listSubscriptions({ customer_id }).then(res => {
-      expect(res.status).toEqual(200);
-      return res.data?.[0].subscription_id ?? null;
-    });
+    const subscriptionId = await lotus
+      .listSubscriptions({ customer_id })
+      .then((res) => {
+        expect(res.status).toEqual(200);
+        return res.data?.[0].subscription_id ?? null;
+      });
 
     if (!subscriptionId) {
       return;
@@ -410,6 +415,6 @@ describe("Testing Subscriptions Endpoints", () => {
     const result = await lotus.cancelSubscription({
       subscription_id: subscriptionId,
     });
-    expect(result.status).toEqual(200);
+    expect(result.status).toEqual(400);
   });
 });

@@ -463,7 +463,7 @@ class Lotus {
    * @param params
    *
    */
-  async getCustomerFeatureAccess(
+  async getFeatureAccess(
     params: CustomerFeatureAccess
   ): Promise<AxiosResponse<components["schemas"]["GetFeatureAccess"][]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
