@@ -13,7 +13,7 @@ export interface CreditResponse {
   description: string | null;
   effective_at: Date;
   expires_at: Date | null;
-  status: "active" | "inactive";
+  status: string[];
   amount_paid: number;
   amount_paid_currency: Currency;
   drawdowns: {
