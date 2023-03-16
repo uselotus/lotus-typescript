@@ -37,6 +37,8 @@ export const REQUEST_URLS = {
     `/api/subscriptions/${subscription_id}/cancel/`,
   UPDATE_SUBSCRIPTION: (subscription_id) =>
     `/api/subscriptions/${subscription_id}/update/`,
+  CHANGE_PREPAID_UNITS: (subscription_id, metric_id) =>
+    `/api/subscriptions/${subscription_id}/components/${metric_id}/change_prepaid_units/`,
   SWITCH_SUBSCRIPTION: (subscription_id) =>
     `/api/subscriptions/${subscription_id}/switch_plan/`,
   GET_ALL_SUBSCRIPTIONS: "/api/subscriptions/",
@@ -52,6 +54,7 @@ export const REQUEST_URLS = {
   GET_METRIC_ACCESS: "/api/metric_access/",
   TRACK_EVENT: "/api/track/",
   GET_INVOICES: "/api/invoices/",
+  GET_INVOICE: (invoiceId: string) => `/api/invoices/${invoiceId}/`,
   LIST_CREDITS: "/api/credits/",
   CREATE_CREDIT: "/api/credits/",
   VOID_CREDIT: (creditId: string) => `/api/credits/${creditId}/void/`,
@@ -80,6 +83,8 @@ export enum ValidateEventType {
   voidCredit = "voidCredit",
   updateCredit = "updateCredit",
   listSubscriptions = "listSubscriptions",
+  changePrepaidUnits = "changePrepaidUnits",
+  getInvoice = "getInvoice",
 }
 
 export type CreateCustomerParams =
@@ -147,3 +152,10 @@ export type UpdateCreditParams =
 
 export type VoidCreditParams =
   operations["api_credits_void_create"]["parameters"]["path"];
+
+export type ChangePrepaidUnitsParams =
+  operations["api_subscriptions_components_change_prepaid_units_create"]["parameters"]["path"] &
+    components["schemas"]["ChangePrepaidUnitsRequest"];
+
+export type GetInvoiceParams =
+  operations["api_invoices_retrieve"]["parameters"]["path"];

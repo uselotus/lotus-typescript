@@ -14,6 +14,8 @@ import {
   VoidCreditParams,
   UpdateCreditParams,
   UpdateSubscriptionParams,
+  ChangePrepaidUnitsParams,
+  GetInvoiceParams,
 } from "./data-types";
 
 export function eventValidation(event: any, type: ValidateEventType) {
@@ -46,6 +48,10 @@ export function eventValidation(event: any, type: ValidateEventType) {
       return validateVoidCreditEvent(event);
     case ValidateEventType.updateCredit:
       return validateUpdateCreditEvent(event);
+    case ValidateEventType.changePrepaidUnits:
+      return validateChangePrepaidUnitsEvent(event);
+    case ValidateEventType.getInvoice:
+      return validateGetInvoiceEvent(event);
     default:
       throw new Error("Invalid Event Type");
   }
@@ -260,6 +266,27 @@ function validateUpdateCreditEvent(event: UpdateCreditParams) {
 }
 
 /**
+ * Validate a "changePrepaidUnits" event.
+ */
+function validateChangePrepaidUnitsEvent(event: ChangePrepaidUnitsParams) {
+  if (!event.subscription_id) {
+    throw new Error("subscription_id is a required key");
+  }
+
+  if (!event.units) {
+    throw new Error("units is a required key");
+  }
+
+  if (event.units < 0) {
+    throw new Error("units must be greater than 0");
+  }
+
+  if (!event.metric_id) {
+    throw new Error("metric_id is a required key");
+  }
+}
+
+/**
  * Validate a "ListSubscription" event.
  */
 
@@ -282,5 +309,17 @@ function validateListSubscriptionEvent(event: ListAllSubscriptionsParams) {
         );
       }
     });
+  }
+}
+
+/**
+ * Validate a "GetInvoice" event.
+ *
+ * @param event
+ */
+
+function validateGetInvoiceEvent(event: GetInvoiceParams) {
+  if (!event.invoice_id) {
+    throw new Error("invoice_id is a required key");
   }
 }

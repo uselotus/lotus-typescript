@@ -28,6 +28,8 @@ import {
   ListAllPlansParams,
   CancelAddonParams,
   UpdateSubscriptionParams,
+  ChangePrepaidUnitsParams,
+  GetInvoiceParams,
 } from "./data-types";
 import { ListCustomerResponse } from "./responses/ListCustomerResponse";
 import { CreateSubscription } from "./responses/CreateSubscription";
@@ -343,7 +345,7 @@ class Lotus {
   /**
    * Switch a Subscription Plan.
    */
-  async switchSubscription(
+  async switchSubscriptionPlan(
     params: SwitchSubscriptionParams
   ): Promise<AxiosResponse<CreateSubscription>> {
     eventValidation(params, ValidateEventType.switchSubscription);
@@ -463,7 +465,7 @@ class Lotus {
    * @param params
    *
    */
-  async getFeatureAccess(
+  async checkFeatureAccess(
     params: CustomerFeatureAccess
   ): Promise<AxiosResponse<components["schemas"]["GetFeatureAccess"][]>> {
     eventValidation(params, ValidateEventType.customerFeatureAccess);
@@ -484,7 +486,7 @@ class Lotus {
    * @param params
    *
    */
-  async getMetricAccess(
+  async checkMetricAccess(
     params: CustomerMetricAccessParams
   ): Promise<AxiosResponse<components["schemas"]["GetEventAccess"][]>> {
     eventValidation(params, ValidateEventType.customerMetricAccess);
@@ -558,6 +560,18 @@ class Lotus {
     return callReq<components["schemas"]["Invoice"][]>(req);
   }
 
+  async getInvoice(
+    params: GetInvoiceParams
+  ): Promise<AxiosResponse<components["schemas"]["Invoice"]>> {
+    const req = this.getRequestObject(
+      REQUEST_TYPES.GET,
+      REQUEST_URLS.GET_INVOICE(params.invoice_id),
+      null
+    );
+    this.setRequestTimeout(req);
+    return callReq<components["schemas"]["Invoice"]>(req);
+  }
+
   _isErrorRetryable(error) {
     // Retry Network Errors.
     if (axiosRetry.isNetworkError(error)) {
@@ -576,6 +590,22 @@ class Lotus {
 
     // Retry if rate limited.
     return error.response.status === 429;
+  }
+
+  async changePrepaidUnits(
+    params: ChangePrepaidUnitsParams
+  ): Promise<AxiosResponse<components["schemas"]["SubscriptionRecord"]>> {
+    eventValidation(params, ValidateEventType.changePrepaidUnits);
+    const request = this.getRequestObject(
+      REQUEST_TYPES.POST,
+      REQUEST_URLS.CHANGE_PREPAID_UNITS(
+        params.subscription_id,
+        params.metric_id
+      ),
+      params
+    );
+    this.setRequestTimeout(request);
+    return callReq<components["schemas"]["SubscriptionRecord"]>(request);
   }
 
   async listCredits(

@@ -221,7 +221,7 @@ describe("Testing Plans Endpoints", () => {
 
 describe("TestingFeature and Metric Access", () => {
   it("Test Feature Access", async () => {
-    const result = await lotus.getFeatureAccess({
+    const result = await lotus.checkFeatureAccess({
       feature_id: feature_id,
       customer_id,
     });
@@ -238,7 +238,7 @@ describe("TestingFeature and Metric Access", () => {
   });
 
   it("Test Customer Metric Access", async () => {
-    const result = await lotus.getMetricAccess({
+    const result = await lotus.checkMetricAccess({
       metric_id: metric_id,
       customer_id,
     });
