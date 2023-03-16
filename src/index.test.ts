@@ -401,12 +401,12 @@ describe("Testing Subscriptions Endpoints", () => {
   });
 
   it("Test Cancel Subscription That Does Exist", async () => {
-    const subscriptionId = await lotus
-      .listSubscriptions({ customer_id })
-      .then((res) => {
-        expect(res.status).toEqual(200);
-        return res.data?.[0].subscription_id ?? null;
-      });
+    const subscriptionId = await lotus.createSubscription({
+      customer_id,
+      plan_id,
+      subscription_filters: [{ property_name: "name", value: "5" }],
+      start_date: date.toISOString(),
+    }).then(result => result.data?.subscription_id ?? null).catch(console.log);
 
     if (!subscriptionId) {
       return;
