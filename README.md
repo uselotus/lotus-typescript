@@ -25,24 +25,35 @@ const lotus = new Lotus(api_key, {
 ## Currently Supported Methods
 
 ```
-1. TrackEvent
-2. Get All Customers
-3. Get Customer Details
-4. Create Customer
-5. Create Subscription
-6. Cancel Subscription
-7. Update Subscription
-8. Get All Subscriptions
-9. Get Subscription Details
-10. Get All Plans
-11. Get Feature Access
-12. Get Metric Access
-
+1. trackEvent
+2. listCustomers
+3. getCustomer
+4. createCustomer
+5. createSubscription
+6. cancelSubscription
+7. updateSubscription
+8. switchSubscriptionPlan
+9. listSubscriptions
+10. attachAddon
+11. cancelAddon
+12. changePrepaidUnits
+13. listPlans
+14. getPlan
+15. checkFeatureAccess
+16. checkMetricAccess
+17. listInvoices
+18. getInvoice
+19. listCredits
+20. createCredit
+21. voidCredit
+22. updateCredit
 ```
 
 ## Making calls
 
 Please refer to the [Lotus documentation](https://docs.uselotus.io/api-reference/typescript-guide) for more information on how to use the library.
+
+All parameters and return types are defined in snake_case. This is consistent across all Lotus SDKs. Method names are in camelCase.
 
 ## Questions?
 
