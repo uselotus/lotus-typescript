@@ -1,3 +1,4 @@
+import { hasBatch } from ".";
 import {
   CreateCustomerParams,
   CreateSubscriptionParams,
@@ -16,6 +17,7 @@ import {
   UpdateSubscriptionParams,
   ChangePrepaidUnitsParams,
   GetInvoiceParams,
+  TrackEventEntity,
 } from "./data-types";
 
 export function eventValidation(event: any, type: ValidateEventType) {
@@ -165,8 +167,8 @@ function validateCustomerMetricAccessEvent(event: CustomerMetricAccessParams) {
  * Validate a "trackEvent" event.
  */
 function validateTrackEventEvent(event: TrackEvent) {
-  if (!event.batch || !event.batch.length) {
-    throw new Error("Messages batch can't be empty");
+  if (event.batch.length < 1) {
+    throw new Error("Batch must have at least one item");
   }
 
   event.batch.forEach((message) => {

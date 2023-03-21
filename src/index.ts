@@ -68,6 +68,12 @@ interface Options {
   timeout?: boolean;
 }
 
+export function hasBatch(
+  input: TrackEventEntity | TrackEvent
+): input is TrackEvent {
+  return (input as TrackEvent).batch !== undefined;
+}
+
 class Lotus {
   private readonly host: any;
   private readonly apiKey: any;
@@ -220,25 +226,32 @@ class Lotus {
   }
 
   trackEvent(
-    message: TrackEventEntity,
+    message: TrackEventEntity | { batch: TrackEventEntity[] },
     callback: (...args: any[]) => void = noop
   ) {
-    eventValidation(message, ValidateEventType.trackEvent);
+    if (hasBatch(message)) {
+      eventValidation(message, ValidateEventType.trackEvent);
 
-    const apiMessage = {
-      ...message,
-      properties: {
-        ...message.properties,
-        $lib: "lotus-node",
-      },
-    };
+      this.enqueue(message, callback);
+      return this;
+    } else {
+      eventValidation({ batch: [message] }, ValidateEventType.trackEvent);
 
-    this.enqueue(
-      {
-        batch: [apiMessage],
-      },
-      callback
-    );
+      const apiMessage = {
+        ...message,
+        properties: {
+          ...message.properties,
+          $lib: "lotus-node",
+        },
+      };
+
+      this.enqueue(
+        {
+          batch: [apiMessage],
+        },
+        callback
+      );
+    }
 
     return this;
   }
